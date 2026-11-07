@@ -1103,3 +1103,52 @@ func stateWithSecretsLocked(t *testing.T) (*panelState, *clipRecorder) {
 	}
 	return s, rec
 }
+
+// --- v1.1: 复制后自动收起 + 自定义快捷键校验 ---
+
+func TestAutoHideAfterCopy(t *testing.T) {
+	s := unlockedState(t)
+	if !s.settings.HideAfterCopy {
+		t.Fatal("hide-after-copy must default on")
+	}
+	now := time.Now()
+	if s.autoHideDue(now) {
+		t.Error("no copy yet: not due")
+	}
+	s.copy(0)
+	if s.autoHideDue(now) {
+		t.Error("within 2s: not due")
+	}
+	if !s.autoHideDue(now.Add(3 * time.Second)) {
+		t.Error("3s after copy: due")
+	}
+	s.lock()
+	s.hideAt = now.Add(time.Second)
+	if s.autoHideDue(now.Add(3 * time.Second)) {
+		t.Error("locked state never hides (already hidden)")
+	}
+
+	// 关闭开关后不再触发。
+	s2 := unlockedState(t)
+	s2.settings.HideAfterCopy = false
+	s2.copy(0)
+	if s2.autoHideDue(now.Add(3 * time.Second)) {
+		t.Error("setting off must not schedule hide")
+	}
+}
+
+func TestSettingsHideAfterCopyPersist(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "settings.json")
+	st := loadSettings(path)
+	if !st.HideAfterCopy {
+		t.Error("default on expected")
+	}
+	st.HideAfterCopy = false
+	if err := saveSettings(path, st); err != nil {
+		t.Fatal(err)
+	}
+	if got := loadSettings(path); got.HideAfterCopy {
+		t.Error("persisted off expected")
+	}
+}

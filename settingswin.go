@@ -203,7 +203,22 @@ func (ss *settingsState) sections(c *ui.Context, s *panelState) {
 			ss.applyShortcuts()
 		}
 	})
-	ui.Text(c, "若首选快捷键被其他应用占用,自动改用备选").FontSize(11).TextColor(t.TextMuted)
+	ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+		ui.Text(c, "唤起面板自定义").Grow(1)
+		if ui.TextInput(c.Key("summon-custom"), &st.SummonShortcut).
+			Placeholder("如 Alt+Space").Label("唤起面板自定义 输入").Submitted() {
+			ss.applyShortcuts()
+		}
+	})
+	ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+		ui.Text(c, "截屏导入自定义").Grow(1)
+		if ui.TextInput(c.Key("capture-custom"), &st.CaptureShortcut).
+			Placeholder("如 Alt+S").Label("截屏导入自定义 输入").Submitted() {
+			ss.applyShortcuts()
+		}
+	})
+	ui.Text(c, "自定义格式:Cmd/Ctrl/Alt/Shift 组合 + 键名,如 Alt+Shift+K").FontSize(11).TextColor(t.TextMuted)
+	ui.Text(c, "若无效或被占用,自动回退备选快捷键").FontSize(11).TextColor(t.TextMuted)
 }
 
 func (ss *settingsState) applyShortcuts() {

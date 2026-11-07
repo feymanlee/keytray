@@ -250,7 +250,7 @@ func (a *app) row(c *ui.Context, i int) {
 			ui.Avatar(c, label, nil).Size(18, 18)
 		}
 		ui.Text(c, accountLabel(acc)).Grow(1).SingleLine().FontSize(13)
-		ui.Text(c, otp.FormatCode(code)).FontSize(13).TextColor(codeColor)
+		ui.Text(c, otp.FormatCode(code)).FontFeatures("tnum").FontSize(13).TextColor(codeColor)
 		if acc.Type == otp.TOTP && acc.Period != otp.DefaultPeriod {
 			ui.Textf(c, "%d 秒", remaining).FontSize(11).TextColor(t.TextMuted)
 		}
@@ -304,6 +304,7 @@ func (a *app) toggle() {
 	a.state.now = time.Now()
 	a.state.err = ""
 	a.state.touch()
+	a.state.hideAt = time.Time{} // a fresh open cancels any pending auto-hide
 	a.panel = mygo.NewFlyout(mygo.FlyoutOptions{
 		Tray:      a.tray,
 		Placement: mygo.PlacementBottom,
@@ -344,6 +345,9 @@ func (a *app) tickLoop(p *mygo.Window, done chan struct{}) {
 				now := time.Now()
 				a.state.now = now
 				a.state.lastActive = now
+				if a.state.autoHideDue(now) && a.panel != nil {
+					a.panel.Close()
+				}
 			})
 		case <-done:
 			return

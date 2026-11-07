@@ -42,6 +42,7 @@ type panelState struct {
 	accounts  []otp.Account // display order, the vault's order
 	filtered  []otp.Account // accounts matching query
 	rows      []listRow     // panel rows: grouped or flat
+	hideAt    time.Time     // auto-hide the panel after this instant (copy)
 
 	query string
 	err   string
@@ -144,6 +145,11 @@ func (s *panelState) saveSettings() {
 
 // touch marks activity for the auto-lock idle timer.
 func (s *panelState) touch() { s.lastActive = time.Now() }
+
+// autoHideDue reports whether the panel should auto-close after a copy.
+func (s *panelState) autoHideDue(now time.Time) bool {
+	return s.unlocked && s.settings.HideAfterCopy && !s.hideAt.IsZero() && now.After(s.hideAt)
+}
 
 // autoLockDue reports whether the unlocked vault should lock now. Only an
 // encrypted vault can lock.
@@ -364,6 +370,9 @@ func (s *panelState) copy(i int) {
 	}
 	s.copiedLabel, s.copiedAt = accountLabel(s.filtered[i]), time.Now()
 	s.touch()
+	if s.settings.HideAfterCopy {
+		s.hideAt = time.Now().Add(2 * time.Second)
+	}
 	s.writeClip(code)
 	s.scheduleClear(code)
 }

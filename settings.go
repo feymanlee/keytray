@@ -12,8 +12,9 @@ import (
 type Settings struct {
 	Autostart       bool   `json:"autostart"`
 	ClearClipboard  bool   `json:"clearClipboard"`
-	ShowGroups      bool   `json:"showGroups"` // group by issuer, default on
-	AutoUnlock      bool   `json:"autoUnlock"` // keychain auto-unlock, default off
+	ShowGroups      bool   `json:"showGroups"`    // group by issuer, default on
+	HideAfterCopy   bool   `json:"hideAfterCopy"` // auto-hide panel after copy, default on
+	AutoUnlock      bool   `json:"autoUnlock"`    // keychain auto-unlock, default off
 	AutoLock        bool   `json:"autoLock"`
 	AutoLockMinutes int    `json:"autoLockMinutes"`
 	SummonShortcut  string `json:"summonShortcut"`  // open the panel
@@ -44,6 +45,7 @@ func defaultSettings() Settings {
 		Autostart:       true,
 		ClearClipboard:  true,
 		ShowGroups:      true,
+		HideAfterCopy:   true,
 		AutoLock:        false, // 默认不锁定(2026-11-06 需求修订)
 		AutoLockMinutes: 5,
 		SummonShortcut:  defaultSummonShortcut,
