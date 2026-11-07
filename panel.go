@@ -181,10 +181,10 @@ func (a *app) mainView(c *ui.Context) {
 					OnClick(func() { a.openImport() })
 				ui.Button(c.Key("export"), "导出").Label("导出").
 					OnClick(func() { a.openExport() })
-				ui.Button(c.Key("capture"), "截图").Label("截图导入").
-					OnClick(func() { a.openImportWithCapture() })
 				ui.Button(c.Key("manage"), "管理").Label("管理").
 					OnClick(func() { s.toggleManage() })
+				ui.Button(c.Key("settings"), "设置").Label("设置").
+					OnClick(func() { a.openSettings() })
 			}
 			ui.Spacer(c)
 			if s.err != "" {
@@ -199,8 +199,6 @@ func (a *app) mainView(c *ui.Context) {
 					a.state.lock()
 				})
 			}
-			ui.Button(c.Key("settings"), "设置").Label("设置").
-				OnClick(func() { a.openSettings() })
 			ui.Spacer(c)
 			ui.Text(c, "点击复制   esc 关闭").FontSize(10).TextColor(t.TextMuted)
 			ui.Button(c.Key("quit"), "退出").Label("退出").OnClick(mygo.App.Quit)
