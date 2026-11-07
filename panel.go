@@ -154,19 +154,19 @@ func (a *app) mainView(c *ui.Context) {
 			}
 		})
 
-		if rem, ok := centralCountdown(s.filtered, s.now); ok || s.copyHintVisible(s.now) {
-			ui.Row(c).Padding(3, 12).Gap(8).AlignItems(ui.Center).Children(func() {
-				if ok {
-					ui.Textf(c, "过期时间:%d 秒", rem).FontSize(11).
-						TextColor(t.TextMuted).Grow(1)
-				} else {
-					ui.Spacer(c)
-				}
-				if s.copyHintVisible(s.now) {
-					ui.Text(c, "已复制 "+s.copiedLabel).FontSize(11).TextColor(t.Accent)
-				}
-			})
-		}
+		ui.Row(c).Padding(3, 12).Gap(8).AlignItems(ui.Center).Children(func() {
+			if rem, ok := centralCountdown(s.filtered, s.now); ok {
+				ui.Textf(c, "过期时间:%d 秒", rem).FontSize(11).
+					TextColor(t.TextMuted).Grow(1)
+			} else {
+				ui.Spacer(c)
+			}
+			if s.copyHintVisible(s.now) {
+				ui.Text(c, "已复制 "+s.copiedLabel).FontSize(11).TextColor(t.Accent)
+			} else {
+				ui.Text(c, "点击复制 · esc 关闭").FontSize(10).TextColor(t.TextMuted)
+			}
+		})
 		insetDivider(c)
 
 		// 认证管理 menu section.
@@ -185,6 +185,11 @@ func (a *app) mainView(c *ui.Context) {
 					OnClick(func() { s.toggleManage() })
 				ui.Button(c.Key("settings"), "设置").Label("设置").
 					OnClick(func() { a.openSettings() })
+				if s.encrypted {
+					ui.Button(c.Key("lock"), "锁定").Label("锁定").OnClick(func() {
+						a.state.lock()
+					})
+				}
 			}
 			ui.Spacer(c)
 			if s.err != "" {
@@ -193,17 +198,8 @@ func (a *app) mainView(c *ui.Context) {
 		})
 		insetDivider(c)
 
-		ui.Row(c).Padding(5, 10).Gap(6).AlignItems(ui.Center).Children(func() {
-			if s.encrypted {
-				ui.Button(c.Key("lock"), "锁定").Label("锁定").OnClick(func() {
-					a.state.lock()
-				})
-			}
-			ui.Spacer(c)
-			ui.Text(c, "点击复制   esc 关闭").FontSize(10).TextColor(t.TextMuted)
-			ui.Button(c.Key("quit"), "退出").Label("退出").OnClick(mygo.App.Quit)
-		})
 	})
+	_ = t
 }
 
 func (a *app) row(c *ui.Context, i int) {
