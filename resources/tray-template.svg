@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" role="img" aria-labelledby="title desc">
+  <title id="title">Keytray menu bar icon</title>
+  <desc id="desc">A diagonal key cut out of a rounded security badge.</desc>
+  <defs>
+    <mask id="key" maskUnits="userSpaceOnUse" x="0" y="0" width="18" height="18">
+      <rect width="18" height="18" fill="#fff"/>
+      <g fill="none" stroke="#000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="6.5" cy="6.5" r="2.5"/>
+        <path d="M8.3 8.3 13 13M10.4 10.4l1.4-1.4M12.5 12.5l1.4-1.4"/>
+      </g>
+    </mask>
+  </defs>
+  <rect x="0.75" y="0.75" width="16.5" height="16.5" rx="4.5" fill="#000" mask="url(#key)"/>
+</svg>

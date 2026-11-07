@@ -1,0 +1,10 @@
+{
+  "name": "Keytray",
+  "identifier": "com.feyman.keytray",
+  "version": "0.1.0",
+  "icon": "resources/icon.png",
+  "macos": {
+    "icon": "resources/icon.icns"
+  },
+  "out": "build"
+}

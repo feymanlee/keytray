@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Keytray app icon</title>
+  <desc id="desc">A white keyhole and tray mark on a blue violet gradient tile.</desc>
+  <defs>
+    <linearGradient id="bg" x1="100" y1="72" x2="920" y2="952" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#477CFF"/>
+      <stop offset="0.52" stop-color="#5E6CF4"/>
+      <stop offset="1" stop-color="#9651F4"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="280" y1="120" x2="760" y2="880" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.20"/>
+      <stop offset="0.52" stop-color="#FFFFFF" stop-opacity="0.03"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="420" y1="260" x2="640" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEF0FF"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="22" flood-color="#22204A" flood-opacity="0.22"/>
+    </filter>
+    <clipPath id="tileClip">
+      <rect x="48" y="48" width="928" height="928" rx="246"/>
+    </clipPath>
+  </defs>
+
+  <rect x="48" y="48" width="928" height="928" rx="246" fill="url(#bg)" filter="url(#shadow)"/>
+  <g clip-path="url(#tileClip)">
+    <ellipse cx="296" cy="92" rx="520" ry="280" fill="url(#shine)" transform="rotate(-18 296 92)"/>
+    <path d="M48 760C264 690 492 718 976 530V976H48Z" fill="#342A95" opacity="0.08"/>
+  </g>
+
+  <circle cx="512" cy="372" r="156" fill="url(#mark)"/>
+  <circle cx="512" cy="372" r="94" fill="#6A67F0" opacity="0.9"/>
+  <path d="M442 460h140v194c0 28-22 50-50 50h-40c-28 0-50-22-50-50V460Z" fill="url(#mark)"/>
+  <path d="M292 664c0-24 20-44 44-44h352c24 0 44 20 44 44v34c0 74-60 134-134 134H426c-74 0-134-60-134-134v-34Z" fill="url(#mark)"/>
+  <path d="M370 748h284" stroke="#716EF2" stroke-width="20" stroke-linecap="round" opacity="0.3"/>
+</svg>
