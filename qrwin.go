@@ -60,7 +60,7 @@ func (qs *qrState) view(c *ui.Context) {
 			ui.Text(c, "已复制 ✓").FontSize(12).TextColor(t.Accent)
 		}
 		ui.Row(c).Gap(8).Children(func() {
-			ui.Button(c.Key("copy-uri"), "复制链接").Label("复制链接").
+			ui.Button(c.Key("copy-uri"), "复制链接").Label("复制链接").Padding(3, 10).FontSize(13).
 				OnClick(func() {
 					mygo.Clipboard.WriteText(qs.uri)
 					qs.copied = true
@@ -69,7 +69,8 @@ func (qs *qrState) view(c *ui.Context) {
 						qs.win.Update(func() { qs.copied = false })
 					})
 				})
-			ui.Button(c.Key("close"), "关闭").Label("关闭").OnClick(func() { qs.win.Hide() })
+			ui.Button(c.Key("close"), "关闭").Label("关闭").Padding(3, 10).FontSize(13).
+				OnClick(func() { qs.win.Hide() })
 		})
 	})
 }
