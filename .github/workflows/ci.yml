@@ -1,0 +1,104 @@
+# Keytray CI:三平台测试、构建与 tag 发布
+#
+# - test:          单测 + vet(Ubuntu)
+# - build:linux    Linux amd64/arm64 二进制
+# - build:windows  Windows amd64 exe(原生 runner)
+# - build:macos    macOS .app/.dmg(原生 runner,mygo 打包签名)
+# - release:       打 tag(v*)时发布,汇总全部产物
+#
+# 用法:git tag v0.2.0 && git push --tags
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: write # release 需要
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: go vet ./...
+      - run: CGO_ENABLED=0 go test -count=1 ./...
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, target: linux,   files: "dist/" }
+          - { os: windows-latest, target: windows, files: "dist/" }
+          - { os: macos-latest, target: macos,   files: "build/darwin-arm64/" }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Linux (amd64 + arm64)
+        if: matrix.target == 'linux'
+        shell: bash
+        run: |
+          mkdir -p dist
+          GOOS=linux GOARCH=amd64 go build -o dist/keytray-linux-amd64 .
+          GOOS=linux GOARCH=arm64 go build -o dist/keytray-linux-arm64 .
+
+      - name: Windows
+        if: matrix.target == 'windows'
+        shell: bash
+        run: |
+          mkdir -p dist
+          go build -o dist/keytray-windows-amd64.exe .
+
+      - name: macOS(.app/.dmg,mygo 打包)
+        if: matrix.target == 'macos'
+        shell: bash
+        run: go tool mygo build -skip-notarize
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.target }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-linux, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dist-*
+          merge-multiple: true
+          path: dist
+      - name: 整理产物名(带 tag)
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          cd dist
+          mv keytray-linux-amd64   "keytray-${VERSION}-linux-amd64"
+          mv keytray-linux-arm64   "keytray-${VERSION}-linux-arm64"
+          mv keytray-windows-amd64.exe "keytray-${VERSION}-windows-amd64.exe"
+          for f in *.dmg; do
+            [ -e "$f" ] && mv "$f" "keytray-${VERSION}-macos.dmg"
+          done
+          ls -la
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: "Keytray ${{ github.ref_name }}"
+          body: "三平台 Release。macOS 使用 dmg(内含可运行 .app);Windows/Linux 为裸二进制。"
+          files: |
+            dist/keytray-*
+          fail_on_unmatched_files: true
