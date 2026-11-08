@@ -21,7 +21,7 @@ var ErrPermission = errors.New("screenshot: screen recording permission not gran
 // screenRecordingGranted asks CoreGraphics whether this process may
 // capture the screen (no prompt).
 func screenRecordingGranted() bool {
-	lib, err := purego.Dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")
+	lib, err := purego.Dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics", purego.RTLD_NOW)
 	if err != nil {
 		return true // can't check: let screencapture try anyway
 	}
