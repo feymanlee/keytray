@@ -174,6 +174,7 @@ func (a *app) mainView(c *ui.Context) {
 		// 认证管理 menu section.
 		ui.Row(c).Padding(8, 10).Gap(6).AlignItems(ui.Center).Children(func() {
 			if s.manageMode {
+				ui.Spacer(c)
 				ui.PrimaryButton(c.Key("manage-done"), "完成管理").Label("完成管理").Padding(2, 8).FontSize(12).
 					OnClick(func() { s.toggleManage() })
 			} else {
