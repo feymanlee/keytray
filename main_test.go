@@ -379,7 +379,7 @@ func TestViewUnlockSearchCopyLock(t *testing.T) {
 	if len(rec.writes) != 1 || rec.writes[0] != want {
 		t.Errorf("row click wrote %v, want [%s]", rec.writes, want)
 	}
-	if !tt.HasText("已复制 GitHub:feyman") {
+	if !tt.HasText("已复制") {
 		t.Errorf("copy hint missing: %q", tt.Texts())
 	}
 

@@ -162,7 +162,7 @@ func (a *app) mainView(c *ui.Context) {
 				ui.Spacer(c)
 			}
 			if s.copyHintVisible(s.now) {
-				ui.Text(c, "已复制 "+s.copiedLabel).FontSize(11).TextColor(t.Accent)
+				ui.Text(c, "已复制").FontSize(11).TextColor(t.Accent)
 			} else {
 				ui.Text(c, "点击复制 · esc 关闭").FontSize(10).TextColor(t.TextMuted)
 			}
