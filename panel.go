@@ -172,21 +172,21 @@ func (a *app) mainView(c *ui.Context) {
 		// 认证管理 menu section.
 		ui.Row(c).Padding(4, 10).Gap(6).AlignItems(ui.Center).Children(func() {
 			if s.manageMode {
-				ui.PrimaryButton(c.Key("manage-done"), "完成管理").Label("完成管理").
+				ui.PrimaryButton(c.Key("manage-done"), "完成管理").Label("完成管理").Padding(2, 8).FontSize(12).
 					OnClick(func() { s.toggleManage() })
 			} else {
-				ui.Button(c.Key("add"), "添加").Label("添加").
+				ui.Button(c.Key("add"), "添加").Label("添加").Padding(2, 8).FontSize(12).
 					OnClick(func() { a.openForm(otp.Account{}) })
-				ui.Button(c.Key("import"), "导入").Label("导入").
+				ui.Button(c.Key("import"), "导入").Label("导入").Padding(2, 8).FontSize(12).
 					OnClick(func() { a.openImport() })
-				ui.Button(c.Key("export"), "导出").Label("导出").
+				ui.Button(c.Key("export"), "导出").Label("导出").Padding(2, 8).FontSize(12).
 					OnClick(func() { a.openExport() })
-				ui.Button(c.Key("manage"), "管理").Label("管理").
+				ui.Button(c.Key("manage"), "管理").Label("管理").Padding(2, 8).FontSize(12).
 					OnClick(func() { s.toggleManage() })
-				ui.Button(c.Key("settings"), "设置").Label("设置").
+				ui.Button(c.Key("settings"), "设置").Label("设置").Padding(2, 8).FontSize(12).
 					OnClick(func() { a.openSettings() })
 				if s.encrypted {
-					ui.Button(c.Key("lock"), "锁定").Label("锁定").OnClick(func() {
+					ui.Button(c.Key("lock"), "锁定").Label("锁定").Padding(2, 8).FontSize(12).OnClick(func() {
 						a.state.lock()
 					})
 				}
