@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 	qrcode "github.com/skip2/go-qrcode"
@@ -13,13 +11,12 @@ import (
 // qrState is the persistent "account QR" window: scan it with a phone to
 // migrate one account, or copy the URI from the same screen.
 type qrState struct {
-	app    *app
-	acc    otp.Account
-	uri    string
-	bmp    *ui.Bitmap
-	err    string
-	copied bool
-	win    *mygo.Window
+	app *app
+	acc otp.Account
+	uri string
+	bmp *ui.Bitmap
+	err string
+	win *mygo.Window
 }
 
 func newQRState(a *app) *qrState {
@@ -56,18 +53,11 @@ func (qs *qrState) view(c *ui.Context) {
 
 		// URI 是无断点的长串,自动排版会横向溢出:按固定宽度分块展示。
 		ui.Text(c, chunkURI(qs.uri, 40)).FontSize(9).TextColor(t.TextMuted)
-		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-			if qs.copied {
-				ui.Text(c, "已复制 ✓").FontSize(12).TextColor(t.Accent)
-			}
+		ui.Row(c).Gap(8).Children(func() {
 			ui.Button(c.Key("copy-uri"), "复制链接").Label("复制链接").
 				OnClick(func() {
 					mygo.Clipboard.WriteText(qs.uri)
-					qs.copied = true
-					qs.win.Update(func() {})
-					time.AfterFunc(2*time.Second, func() {
-						qs.win.Update(func() { qs.copied = false })
-					})
+					c.Toast("已复制")
 				})
 			ui.Button(c.Key("close"), "关闭").Label("关闭").OnClick(func() { qs.win.Hide() })
 		})
