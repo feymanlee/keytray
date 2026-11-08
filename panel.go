@@ -33,11 +33,12 @@ var digitKeys = [10]ui.Key{
 type app struct {
 	state *panelState
 
-	tray      *mygo.Tray
-	panel     *mygo.Window  // the open flyout, or nil
-	panelDone chan struct{} // stops the panel tick loop
-	siblings  int           // our open windows that legitimately hold the keyboard
-	importUI  *importState  // the hidden, reusable import window
+	tray         *mygo.Tray
+	panel        *mygo.Window  // the open flyout, or nil
+	panelDone    chan struct{} // stops the panel tick loop
+	panelShownAt time.Time     // grace for the focus polling guard
+	siblings     int           // our open windows that legitimately hold the keyboard
+	importUI     *importState  // the hidden, reusable import window
 
 	search ui.Handle // the search input
 	pw     ui.Handle // the password input of whichever view is shown
@@ -334,6 +335,7 @@ func (a *app) toggle() {
 }
 
 func (a *app) showPanel() {
+	a.panelShownAt = time.Now()
 	a.state.now = time.Now()
 	a.state.err = ""
 	a.state.touch()
@@ -387,6 +389,15 @@ func (a *app) tickLoop(p *mygo.Window, done chan struct{}) {
 				a.state.now = now
 				a.state.lastActive = now
 				if a.state.autoHideDue(now) {
+					a.hidePanel()
+					return
+				}
+				// OnBlur does not always arrive for a non-activating
+				// panel; poll as a backstop (2s grace after showing).
+				if now.Sub(a.panelShownAt) > 2*time.Second &&
+					a.panel.IsVisible() && !a.panel.IsFocused() &&
+					a.siblings == 0 &&
+					!(a.importUI != nil && a.importUI.win.IsVisible()) {
 					a.hidePanel()
 				}
 			})
