@@ -61,10 +61,10 @@ jobs:
           mkdir -p dist
           go build -o dist/keytray-windows-amd64.exe .
 
-      - name: macOS(.app/.dmg,mygo 打包)
+      - name: macOS(universal:Apple Silicon + Intel,mygo 打包)
         if: matrix.target == 'macos'
         shell: bash
-        run: go tool mygo build -skip-notarize
+        run: go tool mygo build -platform darwin/universal -skip-notarize
 
       - uses: actions/upload-artifact@v4
         with:
