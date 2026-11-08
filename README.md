@@ -18,7 +18,7 @@
 ![Windows](https://img.shields.io/badge/Windows-0078D4?logo=windows&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?logo=linux&logoColor=black)
 
-**[Download](https://github.com/feymanlee/keytray/releases)** &nbsp;·&nbsp; **[需求基线](REQUIREMENTS.md)** &nbsp;·&nbsp; **[License](LICENSE)**
+**[Download](https://github.com/feymanlee/keytray/releases)** &nbsp;·&nbsp; **[License](LICENSE)**
 
 <!-- TODO：首屏截图（浅色、深色托盘面板各一张），拿到后嵌入此处 -->
 
@@ -64,7 +64,7 @@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o keytray .
 
 ## 功能
 
-- **托盘面板**：验证码 3+3 分组、集中倒计时、临近过期变红、悬停查看全名
+- **托盘面板**：验证码按 3+3 分组加粗（如 `123 456`）、所有 30s 周期账号共用一行倒计时、临近过期变红、悬停查看全名
 - **多路导入**：截屏框选（多码）、本地图片、`otpauth://`、GA 迁移链接、加密备份
 - **多账号管理**：搜索、拖拽排序、编辑全部参数、按服务分组、管理模式（✎ ↑ ↓ 🗑）
 - **导出**：加密备份（独立密码）、明文 CSV（包含 `otpauth://` 列，带二次确认）
