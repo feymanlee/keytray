@@ -1110,3 +1110,18 @@ func TestLabelOverflows(t *testing.T) {
 		t.Error("medium label fits")
 	}
 }
+
+func TestChunkURI(t *testing.T) {
+	uri := strings.Repeat("A", 95)
+	got := chunkURI(uri, 40)
+	lines := strings.Split(got, "\n")
+	if len(lines) != 3 || len(lines[0]) != 40 || len(lines[1]) != 40 || len(lines[2]) != 15 {
+		t.Errorf("chunked: %v", lines)
+	}
+	if strings.ReplaceAll(got, "\n", "") != uri {
+		t.Error("chunks must not alter content")
+	}
+	if got := chunkURI("short", 40); got != "short" {
+		t.Errorf("short: %q", got)
+	}
+}

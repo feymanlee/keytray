@@ -51,7 +51,8 @@ func (qs *qrState) view(c *ui.Context) {
 			ui.Spacer(c)
 		}
 
-		ui.Text(c, qs.uri).FontSize(10).TextColor(t.TextMuted)
+		// URI 是无断点的长串,自动排版会横向溢出:按固定宽度分块展示。
+		ui.Text(c, chunkURI(qs.uri, 40)).FontSize(9).TextColor(t.TextMuted)
 		ui.Row(c).Gap(8).Children(func() {
 			ui.Button(c.Key("copy-uri"), "复制链接").Label("复制链接").
 				OnClick(func() { mygo.Clipboard.WriteText(qs.uri) })
@@ -81,4 +82,25 @@ func (a *app) showQR(acc otp.Account) {
 	}
 	qs.win.Update(func() {})
 	qs.win.Show()
+}
+
+// chunkURI breaks a URI into fixed-width chunks (one per line) so it
+// wraps predictably inside the window. Display only; the clipboard and
+// QR payload always carry the original URI.
+func chunkURI(s string, width int) string {
+	if width <= 0 || len(s) <= width {
+		return s
+	}
+	var b []byte
+	for i := 0; i < len(s); i += width {
+		if i > 0 {
+			b = append(b, '\n')
+		}
+		end := i + width
+		if end > len(s) {
+			end = len(s)
+		}
+		b = append(b, s[i:end]...)
+	}
+	return string(b)
 }
