@@ -50,8 +50,7 @@ type panelState struct {
 
 	// masterPw re-encrypts the vault on change; it lives only in memory
 	// while an encrypted vault is unlocked and is dropped by lock.
-	masterPw   string
-	manageMode bool
+	masterPw string
 
 	unlockPw string
 
@@ -176,7 +175,7 @@ func (s *panelState) filter() {
 			s.filtered = append(s.filtered, a)
 		}
 	}
-	grouped := s.settings.ShowGroups && q == "" && !s.manageMode
+	grouped := s.settings.ShowGroups && q == ""
 	s.rows = buildRows(s.filtered, grouped)
 }
 
@@ -278,7 +277,6 @@ func (s *panelState) lock() {
 	s.unlocked = false
 	s.accounts = nil
 	s.masterPw = ""
-	s.manageMode = false
 	s.unlockPw = ""
 	s.err = ""
 	s.query = ""
@@ -647,16 +645,6 @@ func (s *panelState) reportErr(err error) {
 	if err != nil {
 		s.err = err.Error()
 	}
-}
-
-// toggleManage enters (clearing the search, so rows map 1:1 to the vault
-// order) or leaves the manage mode with per-row edit/move/delete actions.
-func (s *panelState) toggleManage() {
-	s.manageMode = !s.manageMode
-	if s.manageMode {
-		s.query = ""
-	}
-	s.filter()
 }
 
 // centralCountdown returns the shared remaining seconds of standard 30s

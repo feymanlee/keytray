@@ -109,11 +109,10 @@ func (a *app) mainView(c *ui.Context) {
 		ord := digitOrdinal(key)
 		c.OnShortcut(ui.Shift|ui.Cmd, key, func() { s.copyOrd(ord) })
 	}
-	// A 添加 / I 导入 / S 截图 / D 管理, as in the reference app's menu.
+	// A 添加 / I 导入 / S 截图, as in the reference app's menu.
 	c.OnShortcut(0, ui.KeyA, func() { a.openForm(otp.Account{}) })
 	c.OnShortcut(0, ui.KeyI, func() { a.openImport() })
 	c.OnShortcut(0, ui.KeyS, func() { a.openImportWithCapture() })
-	c.OnShortcut(0, ui.KeyD, func() { s.toggleManage() })
 
 	ui.Column(c).Fill().Children(func() {
 		ui.Row(c).Padding(7, 12).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -131,9 +130,8 @@ func (a *app) mainView(c *ui.Context) {
 		// overlapping text at our row density.
 		a.list.Header = nil
 		// Drag reorder only when rows map 1:1 to vault order: flat full
-		// view (grouping off). Search, manage mode and grouped views
-		// disable it.
-		flat := !s.manageMode && s.query == "" && !s.settings.ShowGroups
+		// view (grouping off). Search and grouped views disable it.
+		flat := s.query == "" && !s.settings.ShowGroups
 		if flat {
 			a.list.Reorder = func(rows []int, to int) {
 				reordered := applyReorder(s.accounts, rows, to)
@@ -175,28 +173,20 @@ func (a *app) mainView(c *ui.Context) {
 
 		// 认证管理 menu section.
 		ui.Row(c).Padding(8, 10).Gap(6).AlignItems(ui.Center).Children(func() {
-			if s.manageMode {
-				ui.Spacer(c)
-				ui.PrimaryButton(c.Key("manage-done"), "完成管理").Label("完成管理").Padding(3, 10).FontSize(13).
-					OnClick(func() { s.toggleManage() })
-			} else {
-				ui.Button(c.Key("add"), "添加").Label("添加").Padding(3, 10).FontSize(13).
-					OnClick(func() { a.openForm(otp.Account{}) })
-				ui.Button(c.Key("import"), "导入").Label("导入").Padding(3, 10).FontSize(13).
-					OnClick(func() { a.openImport() })
-				ui.Button(c.Key("export"), "导出").Label("导出").Padding(3, 10).FontSize(13).
-					OnClick(func() { a.openExport() })
-				ui.Button(c.Key("manage"), "管理").Label("管理").Padding(3, 10).FontSize(13).
-					OnClick(func() { s.toggleManage() })
-				ui.Button(c.Key("settings"), "设置").Label("设置").Padding(3, 10).FontSize(13).
-					OnClick(func() { a.openSettings() })
-				if s.encrypted {
-					ui.Button(c.Key("lock"), "锁定").Label("锁定").Padding(3, 10).FontSize(13).OnClick(func() {
-						a.state.lock()
-					})
-				}
-				ui.Spacer(c)
+			ui.Button(c.Key("add"), "添加").Label("添加").Padding(3, 10).FontSize(13).
+				OnClick(func() { a.openForm(otp.Account{}) })
+			ui.Button(c.Key("import"), "导入").Label("导入").Padding(3, 10).FontSize(13).
+				OnClick(func() { a.openImport() })
+			ui.Button(c.Key("export"), "导出").Label("导出").Padding(3, 10).FontSize(13).
+				OnClick(func() { a.openExport() })
+			ui.Button(c.Key("settings"), "设置").Label("设置").Padding(3, 10).FontSize(13).
+				OnClick(func() { a.openSettings() })
+			if s.encrypted {
+				ui.Button(c.Key("lock"), "锁定").Label("锁定").Padding(3, 10).FontSize(13).OnClick(func() {
+					a.state.lock()
+				})
 			}
+			ui.Spacer(c)
 			if s.err != "" {
 				ui.Text(c, s.err).FontSize(11).TextColor(warnColor)
 			}
@@ -219,11 +209,6 @@ func (a *app) row(c *ui.Context, i int) {
 		return
 	}
 	acc := s.filtered[r.accIdx]
-
-	if s.manageMode {
-		a.manageRow(c, i, acc)
-		return
-	}
 
 	code, err := acc.Code(s.now)
 	if err != nil {
@@ -263,6 +248,22 @@ func (a *app) row(c *ui.Context, i int) {
 			ui.Textf(c, "⇧⌘%d", r.ord).FontSize(10).TextColor(t.TextMuted)
 		}
 	})
+	// 右键菜单:编辑 / 上移 / 下移 / 删除(替代旧管理模式)。
+	row.ContextMenu(func(m *ui.Menu) {
+		if m.Item("编辑").Chosen() {
+			a.openForm(acc)
+		}
+		if m.Item("上移").Chosen() {
+			s.reportErr(s.MoveAccount(acc, -1))
+		}
+		if m.Item("下移").Chosen() {
+			s.reportErr(s.MoveAccount(acc, 1))
+		}
+		m.Separator()
+		if m.Item("删除").Chosen() {
+			s.reportErr(s.RemoveAccount(acc))
+		}
+	})
 	// 溢出省略时悬停看全名:自绘轻量气泡(主题底色),不用系统黑泡。
 	// 名称没溢出就不挂 tooltip。
 	label := accountLabel(acc)
@@ -295,25 +296,6 @@ func hoverBG(t *ui.Theme, hovered bool) ui.Color {
 // like native menu separators.
 func insetDivider(c *ui.Context) {
 	ui.Divider(c).Padding(0, 12)
-}
-
-// manageRow shows edit/move/delete actions for one account. Mutations go
-// through the state, which persists each change to the vault.
-func (a *app) manageRow(c *ui.Context, i int, acc otp.Account) {
-	t := c.Theme()
-	ui.Row(c.Key(fmt.Sprintf("mrow-%d", i))).
-		Padding(4, 10).Gap(6).AlignItems(ui.Center).Radius(8).Children(func() {
-		ui.Text(c, accountLabel(acc)).Grow(1).SingleLine().FontSize(13)
-		ui.Text(c, string(acc.Type)).FontSize(10).TextColor(t.TextMuted)
-		manageOnce.Do(loadManageIcons)
-		actionButton(c, editIcon, "编辑", t.Accent, func() { a.openForm(acc) })
-		ui.Row(c.Key("reorder")).Gap(1).Padding(1).Radius(6).
-			Background(t.Border.Mix(t.Surface, 0.5)).Shrink(0).Children(func() {
-			actionButton(c, upIcon, "上移", t.TextMuted, func() { a.state.reportErr(a.state.MoveAccount(acc, -1)) })
-			actionButton(c, downIcon, "下移", t.TextMuted, func() { a.state.reportErr(a.state.MoveAccount(acc, 1)) })
-		})
-		actionButton(c, trashIcon, "删除", t.Danger, func() { a.state.reportErr(a.state.RemoveAccount(acc)) })
-	})
 }
 
 // toggle opens the flyout next to the tray icon, or closes it.
