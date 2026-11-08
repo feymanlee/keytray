@@ -265,7 +265,9 @@ func (a *app) row(c *ui.Context, i int) {
 	ui.TooltipBase(c, row, func(tip ui.Element) {
 		// 不 AttachTo:框架自动定位(上方居中,无空间翻到下方);
 		// Margin 把气泡和行之间撑出间隙。
-		tip.Margin(6).Padding(4, 9).Radius(6).Background(t.Surface).Border(1, t.Border)
+		// Margin 撑出间隙;超长名称换行,气泡收窄不横贯面板。
+		tip.Margin(6).MaxWidth(panelWidth-24).
+			Padding(4, 9).Radius(6).Background(t.Surface).Border(1, t.Border)
 		tip.Children(func() {
 			ui.Text(c, label).FontSize(11).TextColor(t.Text)
 		})
