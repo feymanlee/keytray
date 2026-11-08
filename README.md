@@ -1,8 +1,9 @@
 <div align="center">
 
-<img src="resources/icon.png" alt="Keytray Logo" width="128" height="128">
-
-# Keytray
+<h1>
+  <img src="resources/icon.png" alt="Keytray Logo" width="96" height="96"><br>
+  Keytray
+</h1>
 
 ### 两步验证码,就在菜单栏。
 

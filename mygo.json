@@ -1,6 +1,6 @@
 {
   "name": "Keytray",
-  "identifier": "com.feyman.keytray",
+  "identifier": "com.redkit.keytray",
   "version": "0.1.0",
   "icon": "resources/icon.png",
   "macos": {

@@ -27,7 +27,7 @@ macOS 菜单栏常驻的两步验证器(TOTP/HOTP Authenticator),基于 [mygo](h
 | 二维码解码 | `github.com/makiuchi-d/gozxing`(纯 Go;mygo 不提供) |
 | 屏幕截取 | 系统 `screencapture -i` CLI(mygo 不提供桌面截屏) |
 | 密码派生/加密 | `golang.org/x/crypto/argon2` + 标准库 AES-256-GCM |
-| 应用标识 | 名字 `keytray`,identifier `com.feyman.keytray` |
+| 应用标识 | 名字 `keytray`,identifier `com.redkit.keytray` |
 | 界面语言 | v1 仅中文,文案集中存放便于后续 i18n |
 
 mygo 自带并直接使用:托盘 + Flyout 面板、全局热键、窗口与原生组件、`PathUserData` 路径、剪贴板、开机自启、单实例锁、通知。

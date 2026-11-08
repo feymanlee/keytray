@@ -193,8 +193,9 @@ func (a *app) mainView(c *ui.Context) {
 						a.state.lock()
 					})
 				}
+			} else {
+				ui.Spacer(c)
 			}
-			ui.Spacer(c)
 			if s.err != "" {
 				ui.Text(c, s.err).FontSize(11).TextColor(warnColor)
 			}
