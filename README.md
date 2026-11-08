@@ -8,7 +8,7 @@
 ### 两步验证码,就在菜单栏。
 
 **TOTP/HOTP 全参数。截屏框选,一次识别全部二维码。主密码加密,离线本地。**<br>
-`⌥Space` 唤起面板,点一下或 `⇧⌘N` 复制,<br>
+<kbd>⌥Space</kbd> 唤起面板,点一下或 <kbd>⇧⌘N</kbd> 复制,<br>
 三十秒过后,验证码自己换一批。
 
 [![ci](https://github.com/feymanlee/keytray/actions/workflows/ci.yml/badge.svg)](https://github.com/feymanlee/keytray/actions/workflows/ci.yml)
@@ -30,7 +30,7 @@
 
 验证码散落在手机验证器里,换机要一个个迁、截图要一张张拍、抄写要眯眼看 0 和 6。Keytray 把这些放进菜单栏:
 
-- **点一下就复制**:托盘弹出面板,点击账号行或 `⇧⌘N`,验证码直接进剪贴板,30 秒后自动清空。
+- **点一下就复制**:托盘弹出面板,点击账号行或 <kbd>⇧⌘N</kbd>,验证码直接进剪贴板,30 秒后自动清空。
 - **截图即导入**:框选屏幕上的二维码——一次识别全部;Google Authenticator 的迁移链接、本地图片、`otpauth://` 文本、加密备份,四条路都能进。
 - **密钥只属于你**:AES-256-GCM + Argon2id 加密金库(可选,默认明文),不联网、无云同步、无找回后门;主密码丢失即数据不可恢复。
 - **算法不挑食**:TOTP/HOTP 全参数(SHA1/256/512、6/8 位、自定义周期)、Steam Guard、GA 迁移格式。
@@ -49,11 +49,11 @@ go tool mygo build -skip-notarize   # macOS:.app + dmg
 GOOS=windows go build -o keytray.exe .   # Windows
 ```
 
-**2 · 加一个账号。** 点托盘图标 → **添加**(或按 `A`),填服务名、账号名和密钥;或者直接 **截图导入**(⌥S)框选二维码。从 Google Authenticator 迁移:导出的迁移二维码截图识别即可,一条链接搬全部。
+**2 · 加一个账号。** 点托盘图标 → **添加**(或按 <kbd>A</kbd>),填服务名、账号名和密钥;或者直接 **截图导入**(<kbd>⌥S</kbd>)框选二维码。从 Google Authenticator 迁移:导出的迁移二维码,截图识别即可,一条链接搬全部。
 
 **3 · (可选)开启本地加密。** 设置 → 本地加密 → 设主密码。之后可开「启动时自动解锁」(钥匙串)。⚠️ 主密码丢失无法找回,请定期导出加密备份。
 
-**4 · 复制使用。** `⌥Space` 唤起,搜索过滤,点击复制——30 秒后剪贴板自动清空,面板自动收起。
+**4 · 复制使用。** <kbd>⌥Space</kbd> 唤起,搜索过滤,点击复制——30 秒后剪贴板自动清空,面板自动收起。
 
 ## 功能
 
@@ -71,7 +71,7 @@ GOOS=windows go build -o keytray.exe .   # Windows
 | Windows | 10 | amd64(ARM 走模拟层) | .exe | ⚠️ 全屏识别可用,框选与实机验收待续 |
 | Linux | 无硬性门槛(静态二进制) | amd64 + arm64 | 裸二进制 | ⚠️ 需图形桌面 + 任一截屏工具,实机验收待续 |
 
-macOS 功能分层:核心功能 12.0 即可;开机自启 13+ 走系统登录项、12 上自动降级为 launch agent。
+macOS 功能分层:核心功能 12.0 即可;开机自启 13+ 走系统登录项,12 上自动降级为 launch agent。
 
 ## 安全模型
 
