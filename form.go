@@ -52,7 +52,6 @@ func newFormWindow(a *app, acc otp.Account) {
 		Height:  520,
 		Content: ui.View(fs.view),
 	})
-	a.registerChild(fs.win)
 }
 
 // prefill fills the form from an existing account for editing.

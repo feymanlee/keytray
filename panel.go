@@ -33,13 +33,9 @@ var digitKeys = [10]ui.Key{
 type app struct {
 	state *panelState
 
-	tray         *mygo.Tray
-	panel        *mygo.Window   // the open flyout, or nil
-	panelDone    chan struct{}  // stops the panel tick loop
-	panelShownAt time.Time      // grace for the focus polling guard
-	childWins    []*mygo.Window // windows opened from the panel
-	lastChildAt  time.Time      // last child registration (focus race grace)
-	importUI     *importState   // the hidden, reusable import window
+	tray     *mygo.Tray
+	panel    *mygo.Window // the open flyout, or nil
+	importUI *importState // the hidden, reusable import window
 
 	search ui.Handle // the search input
 	pw     ui.Handle // the password input of whichever view is shown
@@ -59,14 +55,9 @@ type app struct {
 }
 
 func (a *app) view(c *ui.Context) {
-	// The panel draws its own background with the app's smaller radius.
+	// The panel is a plain flyout (no system popover): it draws its own
+	// background with the app's own, smaller corner radius.
 	c.Root().Background(c.Theme().Surface).Radius(8)
-	// Escape closes the panel once the search query is empty (mainView
-	// clears it first); the Panel window has no native Esc-to-close.
-	if c.Shortcut(0, ui.KeyEscape) && a.state.query == "" {
-		a.hidePanel()
-		return
-	}
 	switch {
 	case a.state.encrypted && !a.state.unlocked:
 		a.lockView(c)
@@ -323,59 +314,43 @@ func (a *app) manageRow(c *ui.Context, i int, acc otp.Account) {
 	})
 }
 
-// toggle shows the panel near the tray icon, or hides it. The panel is a
-// persistent Panel window (not a system flyout): it stays open while the
-// import/settings windows take the keyboard, and only toggle, Esc, the
-// copy auto-hide or quitting hide it.
+// toggle opens the flyout next to the tray icon, or closes it.
 func (a *app) toggle() {
-	if a.panel.IsVisible() {
-		a.hidePanel()
+	if a.panel != nil {
+		a.panel.Close()
 		return
 	}
-	a.showPanel()
-}
-
-func (a *app) showPanel() {
-	a.panelShownAt = time.Now()
 	a.state.now = time.Now()
 	a.state.err = ""
 	a.state.touch()
 	a.state.hideAt = time.Time{} // a fresh open cancels any pending auto-hide
+	a.panel = mygo.NewFlyout(mygo.FlyoutOptions{
+		Tray:      a.tray,
+		Placement: mygo.PlacementBottom,
+		Gap:       4,
+		Width:     panelWidth,
+		Height:    panelHeight,
+		Focusable: true,
+		Shadow:    true, // on macOS the shadow follows our rounded content
+		Content:   ui.View(a.view),
+	})
 
-	// Position just below the pointer (the tray icon just clicked),
-	// centered on it and clamped to the nearest display's work area.
-	p := mygo.Screen.CursorScreenPoint()
-	d := mygo.Screen.DisplayNearestPoint(p)
-	x := p.X - panelWidth/2
-	y := p.Y + 6
-	wa := d.WorkArea
-	x = max(wa.X, min(x, wa.X+wa.Width-panelWidth))
-	y = max(wa.Y, min(y, wa.Y+wa.Height-panelHeight))
-	a.panel.SetPosition(x, y)
-
+	// Refresh codes and the countdown every second while the panel is open.
 	done := make(chan struct{})
-	a.panelDone = done
 	go a.tickLoop(a.panel, done)
+	a.panel.OnClosed(func() {
+		a.panel = nil
+		close(done)
+		s := a.state // forget what was typed; keep the lock state itself
+		s.query, s.unlockPw, s.err = "", "", ""
+		s.filter()
+	})
 
 	if a.state.encrypted && !a.state.unlocked {
 		a.pw.Focus()
 	} else {
 		a.search.Focus()
 	}
-	a.panel.Show()
-}
-
-// hidePanel stops the tick loop and hides the panel, forgetting what was
-// typed but keeping the lock state itself.
-func (a *app) hidePanel() {
-	if a.panelDone != nil {
-		close(a.panelDone)
-		a.panelDone = nil
-	}
-	s := a.state
-	s.query, s.unlockPw, s.err = "", "", ""
-	s.filter()
-	a.panel.Hide()
 }
 
 func (a *app) tickLoop(p *mygo.Window, done chan struct{}) {
@@ -389,16 +364,8 @@ func (a *app) tickLoop(p *mygo.Window, done chan struct{}) {
 				now := time.Now()
 				a.state.now = now
 				a.state.lastActive = now
-				if a.state.autoHideDue(now) {
-					a.hidePanel()
-					return
-				}
-				// OnBlur does not always arrive for a non-activating
-				// panel; poll as a backstop (2s grace after showing).
-				if now.Sub(a.panelShownAt) > 2*time.Second &&
-					a.panel.IsVisible() && !a.panel.IsFocused() &&
-					!a.childHoldsKey() {
-					a.hidePanel()
+				if a.state.autoHideDue(now) && a.panel != nil {
+					a.panel.Close()
 				}
 			})
 		case <-done:
@@ -574,7 +541,9 @@ func (a *app) ready() {
 	} else {
 		a.tray.OnClick(a.toggle)
 		a.tray.OnRightClick(func() {
-			a.hidePanel()
+			if a.panel != nil {
+				a.panel.Close()
+			}
 			a.tray.SetMenu(menu)
 			defer a.tray.SetMenu(nil)
 			a.tray.PopUpMenu()
@@ -586,30 +555,6 @@ func (a *app) ready() {
 	})
 
 	a.importUI = newImportState(a)
-
-	// The main panel: a persistent frameless panel window, shown/hidden —
-	// never closed — so sibling windows (import, settings) never knock it
-	// away. Rounded corners come from our own root background.
-	a.panel = mygo.NewWindow(mygo.WindowOptions{
-		Title:         "Keytray",
-		Panel:         true,
-		Hidden:        true,
-		Frameless:     true,
-		Transparent:   true,
-		DisableResize: true,
-		Width:         panelWidth,
-		Height:        panelHeight,
-		Content:       ui.View(a.view),
-	})
-	a.panel.OnClose(func(e *mygo.CloseEvent) {
-		e.PreventDefault() // Cmd-W hides instead of closing
-		a.hidePanel()
-	})
-	// Click-outside closes the panel — unless the focus went to one of
-	// our own windows (import, settings, forms), which must not knock
-	// the panel away (the user asked for exactly that).
-	a.panel.OnBlur(a.panelBlur)
-
 	go a.autoLockLoop()
 	a.ensureHTTP()
 
@@ -666,38 +611,4 @@ func labelOverflows(label string) bool {
 		}
 	}
 	return w > 190
-}
-
-// panelBlur hides the panel on focus loss, except when the focus went to
-// one of our sibling windows.
-func (a *app) panelBlur() {
-	if a.childHoldsKey() {
-		return
-	}
-	a.hidePanel()
-}
-
-// childHoldsKey reports whether a panel-opened window currently holds
-// the keyboard — the panel must stay while that is true.
-func (a *app) childHoldsKey() bool {
-	// Grace right after registering a child: its key status may not have
-	// settled when the panel's blur arrives.
-	if time.Since(a.lastChildAt) < time.Second {
-		return true
-	}
-	for _, w := range a.childWins {
-		if w.IsVisible() && w.IsFocused() {
-			return true
-		}
-	}
-	if a.importUI != nil && a.importUI.win.IsVisible() && a.importUI.win.IsFocused() {
-		return true
-	}
-	return false
-}
-
-// registerChild tracks a window opened from the panel.
-func (a *app) registerChild(w *mygo.Window) {
-	a.childWins = append(a.childWins, w)
-	a.lastChildAt = time.Now()
 }

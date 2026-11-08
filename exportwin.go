@@ -44,7 +44,6 @@ func newExportWindow(a *app) {
 		Height:  420,
 		Content: ui.View(es.view),
 	})
-	a.registerChild(es.win)
 }
 
 func (es *exportState) view(c *ui.Context) {
