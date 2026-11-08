@@ -27,7 +27,7 @@ func newQRState(a *app) *qrState {
 	qs.win = mygo.NewWindow(mygo.WindowOptions{
 		Title:         "账号二维码",
 		Width:         320,
-		Height:        440,
+		Height:        484,
 		Hidden:        true,
 		DisableResize: true,
 		Content:       ui.View(qs.view),
