@@ -261,7 +261,7 @@ func (a *app) row(c *ui.Context, i int) {
 	// 溢出省略时悬停看全名:自绘轻量气泡(主题底色),不用系统黑泡。
 	label := accountLabel(acc)
 	ui.TooltipBase(c, row, func(tip ui.Element) {
-		tip.AttachTo(row, ui.AnchorEnd, ui.AnchorStart).MarginStart(10)
+		// 不 AttachTo:框架自动定位(上方居中,无空间翻到下方)。
 		tip.Padding(4, 9).Radius(6).Background(t.Surface).Border(1, t.Border)
 		tip.Children(func() {
 			ui.Text(c, label).FontSize(11).TextColor(t.Text)
