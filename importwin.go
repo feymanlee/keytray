@@ -178,9 +178,8 @@ func (a *app) startCapture(is *importState) {
 	if is.busy {
 		return
 	}
-	if a.panel != nil {
-		a.panel.Close()
-	}
+	// The main panel stays open (user preference); the system's region
+	// selector floats above everything anyway.
 	is.busy = true
 	is.err, is.summary = "", ""
 	is.win.Show()

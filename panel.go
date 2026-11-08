@@ -33,9 +33,10 @@ var digitKeys = [10]ui.Key{
 type app struct {
 	state *panelState
 
-	tray     *mygo.Tray
-	panel    *mygo.Window // the open flyout, or nil
-	importUI *importState // the hidden, reusable import window
+	tray      *mygo.Tray
+	panel     *mygo.Window  // the open flyout, or nil
+	panelDone chan struct{} // stops the panel tick loop
+	importUI  *importState  // the hidden, reusable import window
 
 	search ui.Handle // the search input
 	pw     ui.Handle // the password input of whichever view is shown
@@ -55,9 +56,14 @@ type app struct {
 }
 
 func (a *app) view(c *ui.Context) {
-	// The panel is a plain flyout (no system popover): it draws its own
-	// background with the app's own, smaller corner radius.
+	// The panel draws its own background with the app's smaller radius.
 	c.Root().Background(c.Theme().Surface).Radius(8)
+	// Escape closes the panel once the search query is empty (mainView
+	// clears it first); the Panel window has no native Esc-to-close.
+	if c.Shortcut(0, ui.KeyEscape) && a.state.query == "" {
+		a.hidePanel()
+		return
+	}
 	switch {
 	case a.state.encrypted && !a.state.unlocked:
 		a.lockView(c)
@@ -314,43 +320,58 @@ func (a *app) manageRow(c *ui.Context, i int, acc otp.Account) {
 	})
 }
 
-// toggle opens the flyout next to the tray icon, or closes it.
+// toggle shows the panel near the tray icon, or hides it. The panel is a
+// persistent Panel window (not a system flyout): it stays open while the
+// import/settings windows take the keyboard, and only toggle, Esc, the
+// copy auto-hide or quitting hide it.
 func (a *app) toggle() {
-	if a.panel != nil {
-		a.panel.Close()
+	if a.panel.IsVisible() {
+		a.hidePanel()
 		return
 	}
+	a.showPanel()
+}
+
+func (a *app) showPanel() {
 	a.state.now = time.Now()
 	a.state.err = ""
 	a.state.touch()
 	a.state.hideAt = time.Time{} // a fresh open cancels any pending auto-hide
-	a.panel = mygo.NewFlyout(mygo.FlyoutOptions{
-		Tray:      a.tray,
-		Placement: mygo.PlacementBottom,
-		Gap:       4,
-		Width:     panelWidth,
-		Height:    panelHeight,
-		Focusable: true,
-		Shadow:    true, // on macOS the shadow follows our rounded content
-		Content:   ui.View(a.view),
-	})
 
-	// Refresh codes and the countdown every second while the panel is open.
+	// Position just below the pointer (the tray icon just clicked),
+	// centered on it and clamped to the nearest display's work area.
+	p := mygo.Screen.CursorScreenPoint()
+	d := mygo.Screen.DisplayNearestPoint(p)
+	x := p.X - panelWidth/2
+	y := p.Y + 6
+	wa := d.WorkArea
+	x = max(wa.X, min(x, wa.X+wa.Width-panelWidth))
+	y = max(wa.Y, min(y, wa.Y+wa.Height-panelHeight))
+	a.panel.SetPosition(x, y)
+
 	done := make(chan struct{})
+	a.panelDone = done
 	go a.tickLoop(a.panel, done)
-	a.panel.OnClosed(func() {
-		a.panel = nil
-		close(done)
-		s := a.state // forget what was typed; keep the lock state itself
-		s.query, s.unlockPw, s.err = "", "", ""
-		s.filter()
-	})
 
 	if a.state.encrypted && !a.state.unlocked {
 		a.pw.Focus()
 	} else {
 		a.search.Focus()
 	}
+	a.panel.Show()
+}
+
+// hidePanel stops the tick loop and hides the panel, forgetting what was
+// typed but keeping the lock state itself.
+func (a *app) hidePanel() {
+	if a.panelDone != nil {
+		close(a.panelDone)
+		a.panelDone = nil
+	}
+	s := a.state
+	s.query, s.unlockPw, s.err = "", "", ""
+	s.filter()
+	a.panel.Hide()
 }
 
 func (a *app) tickLoop(p *mygo.Window, done chan struct{}) {
@@ -364,8 +385,8 @@ func (a *app) tickLoop(p *mygo.Window, done chan struct{}) {
 				now := time.Now()
 				a.state.now = now
 				a.state.lastActive = now
-				if a.state.autoHideDue(now) && a.panel != nil {
-					a.panel.Close()
+				if a.state.autoHideDue(now) {
+					a.hidePanel()
 				}
 			})
 		case <-done:
@@ -541,9 +562,7 @@ func (a *app) ready() {
 	} else {
 		a.tray.OnClick(a.toggle)
 		a.tray.OnRightClick(func() {
-			if a.panel != nil {
-				a.panel.Close()
-			}
+			a.hidePanel()
 			a.tray.SetMenu(menu)
 			defer a.tray.SetMenu(nil)
 			a.tray.PopUpMenu()
@@ -555,6 +574,26 @@ func (a *app) ready() {
 	})
 
 	a.importUI = newImportState(a)
+
+	// The main panel: a persistent frameless panel window, shown/hidden —
+	// never closed — so sibling windows (import, settings) never knock it
+	// away. Rounded corners come from our own root background.
+	a.panel = mygo.NewWindow(mygo.WindowOptions{
+		Title:         "Keytray",
+		Panel:         true,
+		Hidden:        true,
+		Frameless:     true,
+		Transparent:   true,
+		DisableResize: true,
+		Width:         panelWidth,
+		Height:        panelHeight,
+		Content:       ui.View(a.view),
+	})
+	a.panel.OnClose(func(e *mygo.CloseEvent) {
+		e.PreventDefault() // Cmd-W hides instead of closing
+		a.hidePanel()
+	})
+
 	go a.autoLockLoop()
 	a.ensureHTTP()
 
