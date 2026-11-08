@@ -38,6 +38,7 @@ func newQRState(a *app) *qrState {
 
 func (qs *qrState) view(c *ui.Context) {
 	t := c.Theme()
+	qs.app.toastViewport(c)
 	ui.Column(c).Fill().Padding(20).Gap(12).AlignItems(ui.Center).Children(func() {
 		ui.Text(c, accountLabel(qs.acc)).FontSize(14).MaxWidth(280).TextAlign(ui.Center)
 
