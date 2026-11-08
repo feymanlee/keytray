@@ -89,4 +89,4 @@ go run ./cmd/devseed -vault /tmp/vault.kt -password demo-password \
 
 ## License
 
-[MIT](LICENSE) — 与 magpie 同款。
+[MIT](LICENSE)
