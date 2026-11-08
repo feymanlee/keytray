@@ -115,12 +115,12 @@ func (fs *formState) view(c *ui.Context) {
 		ui.Divider(c)
 		ui.Row(c).Padding(12, 20).Gap(8).Children(func() {
 			ui.Spacer(c)
-			ui.Button(c.Key("cancel"), "取消").Label("取消").OnClick(func() {
+			ui.Button(c.Key("cancel"), "取消").Label("取消").Padding(2, 8).FontSize(12).OnClick(func() {
 				if s.win != nil {
 					s.win.Close()
 				}
 			})
-			ui.PrimaryButton(c.Key("save"), "保存").Label("保存").OnClick(func() { s.submit() })
+			ui.PrimaryButton(c.Key("save"), "保存").Label("保存").Padding(2, 8).FontSize(12).OnClick(func() { s.submit() })
 		})
 	})
 }
