@@ -32,6 +32,7 @@ func newSettingsWindow(a *app) {
 		Height:  520,
 		Content: ui.View(ss.view),
 	})
+	ss.win.OnClosed(func() { a.onChildClosed("settings") })
 }
 
 func (ss *settingsState) view(c *ui.Context) {

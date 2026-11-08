@@ -44,6 +44,7 @@ func newExportWindow(a *app) {
 		Height:  420,
 		Content: ui.View(es.view),
 	})
+	es.win.OnClosed(func() { a.onChildClosed("export") })
 }
 
 func (es *exportState) view(c *ui.Context) {

@@ -41,6 +41,7 @@ func newCryptWindow(a *app, mode cryptMode) {
 		Height:  400,
 		Content: ui.View(cs.view),
 	})
+	cs.win.OnClosed(func() { a.onChildClosed("crypt") })
 }
 
 func (cs *cryptState) view(c *ui.Context) {

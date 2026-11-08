@@ -52,6 +52,7 @@ func newFormWindow(a *app, acc otp.Account) {
 		Height:  520,
 		Content: ui.View(fs.view),
 	})
+	fs.win.OnClosed(func() { a.onChildClosed("form") })
 }
 
 // prefill fills the form from an existing account for editing.

@@ -50,6 +50,7 @@ func newImportState(a *app) *importState {
 	is.win.OnClose(func(e *mygo.CloseEvent) {
 		e.PreventDefault()
 		is.win.Hide()
+		a.onChildClosed("import")
 	})
 	return is
 }
@@ -86,7 +87,10 @@ func (is *importState) view(c *ui.Context) {
 			ui.Button(c.Key("capture"), "截取屏幕二维码").Label("截取屏幕二维码").
 				Disabled(is.busy).OnClick(func() { is.app.startCapture(is) })
 			ui.Spacer(c)
-			ui.Button(c.Key("close"), "关闭").Label("关闭").OnClick(func() { is.win.Hide() })
+			ui.Button(c.Key("close"), "关闭").Label("关闭").OnClick(func() {
+				is.win.Hide()
+				is.app.onChildClosed("import")
+			})
 			ui.PrimaryButton(c.Key("import"), "导入").Label("导入").OnClick(func() { is.run() })
 		})
 	})

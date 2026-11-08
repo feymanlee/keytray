@@ -33,6 +33,8 @@ var digitKeys = [10]ui.Key{
 type app struct {
 	state *panelState
 
+	quitting bool
+
 	tray     *mygo.Tray
 	panel    *mygo.Window // the open flyout, or nil
 	importUI *importState // the hidden, reusable import window
@@ -320,6 +322,24 @@ func (a *app) toggle() {
 		a.panel.Close()
 		return
 	}
+	a.openPanel()
+}
+
+// onChildClosed may bring the panel back after one of its windows
+// closes: form/import flows continue in the panel (review and copy).
+// Export and settings are one-shot and do not reopen it.
+func (a *app) onChildClosed(kind string) {
+	if a.quitting || a.panel != nil {
+		return
+	}
+	switch kind {
+	case "form", "import":
+		a.openPanel()
+	}
+}
+
+// openPanel creates the flyout (anchored to the tray icon) and focuses it.
+func (a *app) openPanel() {
 	a.state.now = time.Now()
 	a.state.err = ""
 	a.state.touch()
@@ -550,6 +570,7 @@ func (a *app) ready() {
 		})
 	}
 	mygo.App.OnWillQuit(func(*mygo.QuitEvent) {
+		a.quitting = true
 		a.stopHTTP()
 		a.tray.Destroy()
 	})
