@@ -1,6 +1,9 @@
 # Keytray
 
-macOS 菜单栏两步验证器(TOTP/HOTP):托盘常驻、键盘友好、本地存储。
+[![ci](https://github.com/feymanlee/keytray/actions/workflows/ci.yml/badge.svg)](https://github.com/feymanlee/keytray/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+**Two-factor codes from the menu bar.** 菜单栏两步验证器(TOTP/HOTP):托盘常驻、键盘友好、本地存储。
 
 基于 [mygo](https://github.com/egoist/mygo) 原生 UI 框架,零 cgo,交叉编译免配置。
 
