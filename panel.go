@@ -263,6 +263,7 @@ func (a *app) row(c *ui.Context, i int) {
 		m.Separator()
 		if uri, err := acc.URI(); err == nil && m.Item("复制链接").Chosen() {
 			mygo.Clipboard.WriteText(uri)
+			s.copiedLabel, s.copiedAt = "链接", time.Now()
 		}
 		if m.Item("显示二维码").Chosen() {
 			a.showQR(acc)
