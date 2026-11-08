@@ -170,7 +170,7 @@ func (a *app) mainView(c *ui.Context) {
 		insetDivider(c)
 
 		// 认证管理 menu section.
-		ui.Row(c).Padding(4, 10).Gap(6).AlignItems(ui.Center).Children(func() {
+		ui.Row(c).Padding(8, 10).Gap(6).AlignItems(ui.Center).Children(func() {
 			if s.manageMode {
 				ui.PrimaryButton(c.Key("manage-done"), "完成管理").Label("完成管理").Padding(2, 8).FontSize(12).
 					OnClick(func() { s.toggleManage() })
