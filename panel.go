@@ -239,7 +239,6 @@ func (a *app) row(c *ui.Context, i int) {
 		Height(28).Padding(0, 10).Gap(8).AlignItems(ui.Center).Radius(6)
 	hovered := row.Hovered()
 	row.Background(hoverBG(t, hovered)).
-		Tooltip(accountLabel(acc)). // 溢出省略时,悬停看全名
 		OnClick(func() { s.copy(r.accIdx) }).Children(func() {
 		if svg := iconForIssuer(acc.Issuer); svg != nil {
 			ui.Icon(c, svg).FontSize(15).TextColor(t.Text)
@@ -258,6 +257,14 @@ func (a *app) row(c *ui.Context, i int) {
 		if r.ord >= 0 && r.ord < len(digitKeys) {
 			ui.Textf(c, "⇧⌘%d", r.ord).FontSize(10).TextColor(t.TextMuted)
 		}
+	})
+	// 溢出省略时悬停看全名:自绘轻量气泡(主题底色),不用系统黑泡。
+	label := accountLabel(acc)
+	ui.TooltipBase(c, row, func(tip ui.Element) {
+		tip.Padding(5, 10).Radius(6).Background(t.Surface).Border(1, t.Border)
+		tip.Children(func() {
+			ui.Text(c, label).FontSize(12).TextColor(t.Text)
+		})
 	})
 }
 
