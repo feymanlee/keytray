@@ -56,9 +56,6 @@ func (qs *qrState) view(c *ui.Context) {
 
 		// URI 是无断点的长串,自动排版会横向溢出:按固定宽度分块展示。
 		ui.Text(c, chunkURI(qs.uri, 40)).FontSize(9).TextColor(t.TextMuted)
-		if qs.copied {
-			ui.Text(c, "已复制 ✓").FontSize(12).TextColor(t.Accent)
-		}
 		ui.Row(c).Gap(8).Children(func() {
 			ui.Button(c.Key("copy-uri"), "复制链接").Label("复制链接").Padding(3, 10).FontSize(13).
 				OnClick(func() {
@@ -71,6 +68,12 @@ func (qs *qrState) view(c *ui.Context) {
 				})
 			ui.Button(c.Key("close"), "关闭").Label("关闭").Padding(3, 10).FontSize(13).
 				OnClick(func() { qs.win.Hide() })
+		})
+		// 固定高度的提示槽:出现/消失都不推挤按钮。
+		ui.Row(c).Height(18).AlignItems(ui.Center).Children(func() {
+			if qs.copied {
+				ui.Text(c, "已复制 ✓").FontSize(12).TextColor(t.Accent)
+			}
 		})
 	})
 }
