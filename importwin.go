@@ -199,6 +199,8 @@ func (a *app) startCapture(is *importState) {
 			switch {
 			case errors.Is(err, screenshot.ErrCanceled):
 				// User dismissed the selection; nothing to report.
+			case errors.Is(err, screenshot.ErrPermission):
+				is.err = "屏幕录制权限未生效:系统设置允许后需重启应用再试"
 			case err != nil:
 				is.err = "识别失败:" + err.Error()
 			default:

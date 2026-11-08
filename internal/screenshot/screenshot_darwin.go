@@ -4,11 +4,31 @@ package screenshot
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"image/png"
 	"os"
 	"os/exec"
+
+	"github.com/ebitengine/purego"
 )
+
+// ErrPermission means macOS has not (yet) granted Screen Recording to
+// this app build. Each rebuild changes the code signature, which
+// invalidates the previous grant — re-approve and relaunch.
+var ErrPermission = errors.New("screenshot: screen recording permission not granted")
+
+// screenRecordingGranted asks CoreGraphics whether this process may
+// capture the screen (no prompt).
+func screenRecordingGranted() bool {
+	lib, err := purego.Dlopen("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")
+	if err != nil {
+		return true // can't check: let screencapture try anyway
+	}
+	var preflight func() bool
+	purego.RegisterLibFunc(&preflight, lib, "CGPreflightScreenCaptureAccess")
+	return preflight()
+}
 
 // CaptureRegion asks the user to pick a screen region with the system's
 // interactive selector (screencapture -i), and returns it as PNG bytes.
@@ -17,6 +37,9 @@ import (
 // Requires the Screen Recording permission; without it macOS returns a
 // desktop-image-only capture or an error.
 func CaptureRegion() ([]byte, error) {
+	if !screenRecordingGranted() {
+		return nil, ErrPermission
+	}
 	tmp, err := os.CreateTemp("", "keytray-qr-*.png")
 	if err != nil {
 		return nil, err
