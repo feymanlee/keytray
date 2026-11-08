@@ -260,7 +260,7 @@ func (a *app) row(c *ui.Context, i int) {
 			s.reportErr(s.MoveAccount(acc, 1))
 		}
 		m.Separator()
-		if m.Item("删除").Chosen() {
+		if m.Item("删除").Danger().Chosen() {
 			s.reportErr(s.RemoveAccount(acc))
 		}
 	})
