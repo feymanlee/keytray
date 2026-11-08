@@ -44,6 +44,8 @@ func newExportWindow(a *app) {
 		Height:  420,
 		Content: ui.View(es.view),
 	})
+	a.siblings++
+	es.win.OnClosed(func() { a.siblings-- })
 }
 
 func (es *exportState) view(c *ui.Context) {

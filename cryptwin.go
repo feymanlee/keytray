@@ -41,6 +41,8 @@ func newCryptWindow(a *app, mode cryptMode) {
 		Height:  400,
 		Content: ui.View(cs.view),
 	})
+	a.siblings++
+	cs.win.OnClosed(func() { a.siblings-- })
 }
 
 func (cs *cryptState) view(c *ui.Context) {

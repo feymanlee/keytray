@@ -36,6 +36,7 @@ type app struct {
 	tray      *mygo.Tray
 	panel     *mygo.Window  // the open flyout, or nil
 	panelDone chan struct{} // stops the panel tick loop
+	siblings  int           // our open windows that legitimately hold the keyboard
 	importUI  *importState  // the hidden, reusable import window
 
 	search ui.Handle // the search input
@@ -593,6 +594,10 @@ func (a *app) ready() {
 		e.PreventDefault() // Cmd-W hides instead of closing
 		a.hidePanel()
 	})
+	// Click-outside closes the panel — unless the focus went to one of
+	// our own windows (import, settings, forms), which must not knock
+	// the panel away (the user asked for exactly that).
+	a.panel.OnBlur(a.panelBlur)
 
 	go a.autoLockLoop()
 	a.ensureHTTP()
@@ -650,4 +655,16 @@ func labelOverflows(label string) bool {
 		}
 	}
 	return w > 190
+}
+
+// panelBlur hides the panel on focus loss, except when the focus went to
+// one of our sibling windows.
+func (a *app) panelBlur() {
+	if a.siblings > 0 {
+		return
+	}
+	if a.importUI != nil && a.importUI.win.IsVisible() {
+		return
+	}
+	a.hidePanel()
 }
