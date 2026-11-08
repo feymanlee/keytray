@@ -193,7 +193,6 @@ func (a *app) mainView(c *ui.Context) {
 						a.state.lock()
 					})
 				}
-			} else {
 				ui.Spacer(c)
 			}
 			if s.err != "" {
