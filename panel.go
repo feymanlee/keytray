@@ -268,7 +268,7 @@ func (a *app) row(c *ui.Context, i int) {
 		tip.MaxWidth(panelWidth - 24).Padding(6).Background(ui.Transparent)
 		tip.Children(func() {
 			ui.Box(c).Padding(4, 9).Radius(6).
-				Background(t.Surface).Border(1, t.Border).Children(func() {
+				Background(t.SurfacePressed).Border(1, t.Border).Children(func() {
 				ui.Text(c, label).FontSize(11).TextColor(t.Text)
 			})
 		})
