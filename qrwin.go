@@ -13,12 +13,13 @@ import (
 // qrState is the persistent "account QR" window: scan it with a phone to
 // migrate one account, or copy the URI from the same screen.
 type qrState struct {
-	app *app
-	acc otp.Account
-	uri string
-	bmp *ui.Bitmap
-	err string
-	win *mygo.Window
+	app    *app
+	acc    otp.Account
+	uri    string
+	bmp    *ui.Bitmap
+	err    string
+	copied bool
+	win    *mygo.Window
 }
 
 func newQRState(a *app) *qrState {
