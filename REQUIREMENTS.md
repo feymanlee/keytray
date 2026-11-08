@@ -22,7 +22,7 @@ macOS 菜单栏常驻的两步验证器(TOTP/HOTP Authenticator),基于 [mygo](h
 
 | 决策 | 结论 |
 |---|---|
-| 平台范围 | **v1 仅 macOS**;v1.1 起支持 Windows(2026-11-07,见 §2.1 与 §4.4 截屏行) |
+| 平台范围 | v1 仅 macOS;v1.1 支持 Windows(§2.1)与 Linux(§2.2),均为编译通过 + 全屏识别导入,实机验收待续 |
 | UI 框架 | mygo v0.7.4 原生 UI(已选定,不用 webview) |
 | 二维码解码 | `github.com/makiuchi-d/gozxing`(纯 Go;mygo 不提供) |
 | 屏幕截取 | 系统 `screencapture -i` CLI(mygo 不提供桌面截屏) |
@@ -136,6 +136,12 @@ mygo 自带并直接使用:托盘 + Flyout 面板、全局热键、窗口与原�
 - **截屏导入**:Windows v1.1 为**全屏识别模式**——GDI `BitBlt` 抓整个虚拟屏幕(无 cgo,`syscall` 直调),自动解码屏幕上全部二维码回填导入窗;macOS 式框选交互待后续版本(需自绘选框层)
 - 已通过 `GOOS=windows go build`(amd64/arm64)编译验证;**尚未在真实 Windows 机器上运行验收**——托盘图标规范、DPI 缩放、凭据管理器行为需实机确认
 - 产物:任意机器 `GOOS=windows go build` 直出 exe(`mygo build -platform windows/amd64` 打包 NSIS 安装器)
+
+### 2.2 Linux 支持状态(2026-11-08)
+
+- 托盘(AppIndicator,菜单打开面板)/全局热键(Portal/X11)/剪贴板/对话框/libsecret(自动解锁)/单实例由 mygo Linux 后端提供
+- **截屏导入**:全屏识别模式——依次尝试 `gnome-screenshot` / KDE `spectacle` / ImageMagick `import`,需系统装有其一;框选交互不可用(AppIndicator 无法上报托盘位置,面板居中打开)
+- 已通过 `GOOS=linux go build` 编译验证,未在真实桌面环境验收
 
 ## 5. v1 非目标(明确不做)
 

@@ -10,4 +10,6 @@ var (
 	ErrCanceled = errors.New("screenshot: capture canceled")
 	// ErrUnsupported means this platform has no capture backend (yet).
 	ErrUnsupported = errors.New("screenshot: not supported on this platform")
+	// ErrPermission means the OS has not granted screen capture.
+	ErrPermission = errors.New("screenshot: screen recording permission not granted")
 )

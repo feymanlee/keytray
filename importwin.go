@@ -157,7 +157,10 @@ func (a *app) startCapture(is *importState) {
 	is.busy = true
 	is.win.Show()
 
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS != "darwin" {
+		// Windows/Linux MVP: no interactive region selection — capture
+		// the whole screen and decode every QR on it. (The macOS path
+		// uses the system's region selector below.)
 		// Windows v1.1 MVP: no interactive region selection yet — capture
 		// the whole virtual screen and decode every QR on it. (The macOS
 		// path uses the system's region selector below.)

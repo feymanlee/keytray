@@ -4,7 +4,6 @@ package screenshot
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"image/png"
 	"os"
@@ -16,8 +15,6 @@ import (
 // ErrPermission means macOS has not (yet) granted Screen Recording to
 // this app build. Each rebuild changes the code signature, which
 // invalidates the previous grant — re-approve and relaunch.
-var ErrPermission = errors.New("screenshot: screen recording permission not granted")
-
 // screenRecordingGranted asks CoreGraphics whether this process may
 // capture the screen (no prompt).
 func screenRecordingGranted() bool {
