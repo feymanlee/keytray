@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 	qrcode "github.com/skip2/go-qrcode"
@@ -38,7 +40,6 @@ func newQRState(a *app) *qrState {
 
 func (qs *qrState) view(c *ui.Context) {
 	t := c.Theme()
-	qs.app.toastViewport(c)
 	ui.Column(c).Fill().Padding(20).Gap(12).AlignItems(ui.Center).Children(func() {
 		ui.Text(c, accountLabel(qs.acc)).FontSize(14).MaxWidth(280).TextAlign(ui.Center)
 
@@ -54,11 +55,18 @@ func (qs *qrState) view(c *ui.Context) {
 
 		// URI 是无断点的长串,自动排版会横向溢出:按固定宽度分块展示。
 		ui.Text(c, chunkURI(qs.uri, 40)).FontSize(9).TextColor(t.TextMuted)
+		if qs.copied {
+			ui.Text(c, "已复制 ✓").FontSize(12).TextColor(t.Accent)
+		}
 		ui.Row(c).Gap(8).Children(func() {
 			ui.Button(c.Key("copy-uri"), "复制链接").Label("复制链接").
 				OnClick(func() {
 					mygo.Clipboard.WriteText(qs.uri)
-					c.Toast("已复制")
+					qs.copied = true
+					qs.win.Update(func() {})
+					time.AfterFunc(2*time.Second, func() {
+						qs.win.Update(func() { qs.copied = false })
+					})
 				})
 			ui.Button(c.Key("close"), "关闭").Label("关闭").OnClick(func() { qs.win.Hide() })
 		})

@@ -61,7 +61,6 @@ func (a *app) view(c *ui.Context) {
 	// The panel is a plain flyout (no system popover): it draws its own
 	// background with the app's own, smaller corner radius.
 	c.Root().Background(c.Theme().Surface).Radius(8)
-	a.toastViewport(c)
 	switch {
 	case a.state.encrypted && !a.state.unlocked:
 		a.lockView(c)
@@ -264,7 +263,7 @@ func (a *app) row(c *ui.Context, i int) {
 		m.Separator()
 		if uri, err := acc.URI(); err == nil && m.Item("复制链接").Chosen() {
 			mygo.Clipboard.WriteText(uri)
-			c.Toast("已复制链接")
+			s.copiedLabel, s.copiedAt = "链接", time.Now()
 		}
 		if m.Item("显示二维码").Chosen() {
 			a.showQR(acc)
@@ -625,21 +624,4 @@ func labelOverflows(label string) bool {
 		}
 	}
 	return w > 190
-}
-
-// toastViewport styles this window's toasts: light surface (not the
-// default black), small text and padding, centered in the window.
-func (a *app) toastViewport(c *ui.Context) {
-	t := c.Theme()
-	ui.ToastViewportBase(c, func(viewport ui.Element, toasts []ui.Toast) {
-		viewport.Fill().Center()
-		for _, toast := range toasts {
-			parts := ui.ToastBase(c, toast)
-			parts.Root.Padding(4, 12).Radius(6).
-				Background(t.SurfacePressed).Border(1, t.Border)
-			parts.Root.Children(func() {
-				ui.Text(c, toast.Title).FontSize(12).TextColor(t.Text)
-			})
-		}
-	})
 }
