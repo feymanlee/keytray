@@ -39,7 +39,7 @@ func newQRState(a *app) *qrState {
 func (qs *qrState) view(c *ui.Context) {
 	t := c.Theme()
 	ui.Column(c).Fill().Padding(20).Gap(12).AlignItems(ui.Center).Children(func() {
-		ui.Text(c, accountLabel(qs.acc)).FontSize(14).Bold().MaxWidth(280)
+		ui.Text(c, accountLabel(qs.acc)).FontSize(14).MaxWidth(280)
 
 		switch {
 		case qs.err != "":
