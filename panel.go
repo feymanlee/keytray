@@ -263,13 +263,14 @@ func (a *app) row(c *ui.Context, i int) {
 	// 溢出省略时悬停看全名:自绘轻量气泡(主题底色),不用系统黑泡。
 	label := accountLabel(acc)
 	ui.TooltipBase(c, row, func(tip ui.Element) {
-		// 不 AttachTo:框架自动定位(上方居中,无空间翻到下方);
-		// Margin 把气泡和行之间撑出间隙。
-		// Margin 撑出间隙;超长名称换行,气泡收窄不横贯面板。
-		tip.Margin(6).MaxWidth(panelWidth-24).
-			Padding(4, 9).Radius(6).Background(t.Surface).Border(1, t.Border)
+		// tip 自身透明,透明 Padding 撑出与行的距离;内层 Box 是可见气泡
+		// (自动定位保留,超长名称换行)。
+		tip.MaxWidth(panelWidth - 24).Padding(6).Background(ui.Transparent)
 		tip.Children(func() {
-			ui.Text(c, label).FontSize(11).TextColor(t.Text)
+			ui.Box(c).Padding(4, 9).Radius(6).
+				Background(t.Surface).Border(1, t.Border).Children(func() {
+				ui.Text(c, label).FontSize(11).TextColor(t.Text)
+			})
 		})
 	})
 }
