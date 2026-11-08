@@ -91,7 +91,9 @@ func (is *importState) view(c *ui.Context) {
 				is.win.Hide()
 				is.app.onChildClosed("import")
 			})
-			ui.PrimaryButton(c.Key("import"), "导入").Label("导入").OnClick(func() { is.run() })
+			ui.PrimaryButton(c.Key("import"), "导入").Label("导入").
+				Disabled(strings.TrimSpace(is.text) == ""). // 空输入不可点
+				OnClick(func() { is.run() })
 		})
 	})
 }
