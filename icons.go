@@ -96,16 +96,19 @@ func loadManageIcons() {
 	trashIcon = mustSVG(stroke(`<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/>`))
 }
 
-// actionButton is a small icon button with hover feedback.
-func actionButton(c *ui.Context, svg *ui.SVG, tip string, fn func()) {
-	b := ui.Row(c).Padding(4, 6).Radius(6).AlignItems(ui.Center)
-	hovered := b.Hovered()
+// actionButton keeps row actions compact while retaining keyboard access.
+func actionButton(c *ui.Context, svg *ui.SVG, tip string, color ui.Color, fn func()) {
 	t := c.Theme()
-	bg := ui.Transparent
-	if hovered {
-		bg = t.SurfacePressed
+	b := ui.ButtonBase(c.Key(tip)).Size(24, 24).Radius(5).
+		Label(tip).Tooltip(tip).Role(ui.RoleButton)
+	bg := color.Mix(t.Surface, 0.94)
+	switch {
+	case b.Pressed():
+		bg = color.Mix(t.SurfacePressed, 0.8)
+	case b.Hovered():
+		bg = color.Mix(t.SurfaceHover, 0.85)
 	}
 	b.Background(bg).OnClick(fn).Children(func() {
-		ui.Icon(c, svg).FontSize(14).TextColor(t.Text)
+		ui.Icon(c, svg).FontSize(12).TextColor(color)
 	})
 }

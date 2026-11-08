@@ -554,6 +554,60 @@ func TestViewManageModeAndTypingSafety(t *testing.T) {
 	}
 }
 
+func TestManageRowActions(t *testing.T) {
+	for _, dark := range []bool{false, true} {
+		t.Run(fmt.Sprintf("dark=%v", dark), func(t *testing.T) {
+			s := unlockedState(t)
+			acc := s.accounts[0]
+			if err := s.AddAccount(bankAccount(t)); err != nil {
+				t.Fatal(err)
+			}
+			a := &app{state: s}
+			tt := ui.NewTesterWith(func(c *ui.Context) {
+				if s.accountIndex(acc) >= 0 {
+					a.manageRow(c, 0, acc)
+				}
+			}, panelWidth, 60, ui.TesterOptions{Dark: dark})
+			for _, label := range []string{"编辑", "上移", "下移", "删除"} {
+				info, ok := tt.AccessByRole(ui.RoleButton, label)
+				if !ok || !info.Focusable {
+					t.Fatalf("%s must be a labeled, keyboard-accessible button", label)
+				}
+			}
+			if err := tt.Click("编辑"); err != nil {
+				t.Fatal(err)
+			}
+			if a.lastAction != "form:"+accountLabel(acc) {
+				t.Fatalf("edit did not open the account form: %q", a.lastAction)
+			}
+			a.lastAction = ""
+			tt.Key(0, ui.KeyEnter)
+			if a.lastAction != "form:"+accountLabel(acc) {
+				t.Fatal("focused edit button did not respond to Enter")
+			}
+			if err := tt.Click("下移"); err != nil {
+				t.Fatal(err)
+			}
+			if s.accountIndex(acc) != 1 {
+				t.Fatal("down did not move the account")
+			}
+			if err := tt.Click("上移"); err != nil {
+				t.Fatal(err)
+			}
+			if s.accountIndex(acc) != 0 {
+				t.Fatal("up did not move the account back")
+			}
+			if err := tt.Click("删除"); err != nil {
+				t.Fatal(err)
+			}
+			tt.Frame()
+			if s.err != "" || len(s.accounts) != 1 || s.accountIndex(acc) >= 0 {
+				t.Fatalf("delete failed: %q, %+v", s.err, s.accounts)
+			}
+		})
+	}
+}
+
 // --- M4: settings, auto-lock, export/import backup ---
 
 func TestSettingsDefaultsPersistAndClamp(t *testing.T) {

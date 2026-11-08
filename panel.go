@@ -300,14 +300,17 @@ func insetDivider(c *ui.Context) {
 func (a *app) manageRow(c *ui.Context, i int, acc otp.Account) {
 	t := c.Theme()
 	ui.Row(c.Key(fmt.Sprintf("mrow-%d", i))).
-		Padding(6, 10).Gap(6).AlignItems(ui.Center).Radius(8).Children(func() {
-		ui.Text(c, accountLabel(acc)).Grow(1).SingleLine()
+		Padding(4, 10).Gap(6).AlignItems(ui.Center).Radius(8).Children(func() {
+		ui.Text(c, accountLabel(acc)).Grow(1).SingleLine().FontSize(13)
 		ui.Text(c, string(acc.Type)).FontSize(10).TextColor(t.TextMuted)
 		manageOnce.Do(loadManageIcons)
-		actionButton(c, editIcon, "编辑", func() { a.openForm(acc) })
-		actionButton(c, upIcon, "上移", func() { a.state.reportErr(a.state.MoveAccount(acc, -1)) })
-		actionButton(c, downIcon, "下移", func() { a.state.reportErr(a.state.MoveAccount(acc, 1)) })
-		actionButton(c, trashIcon, "删除", func() { a.state.reportErr(a.state.RemoveAccount(acc)) })
+		actionButton(c, editIcon, "编辑", t.Accent, func() { a.openForm(acc) })
+		ui.Row(c.Key("reorder")).Gap(1).Padding(1).Radius(6).
+			Background(t.Border.Mix(t.Surface, 0.5)).Shrink(0).Children(func() {
+			actionButton(c, upIcon, "上移", t.TextMuted, func() { a.state.reportErr(a.state.MoveAccount(acc, -1)) })
+			actionButton(c, downIcon, "下移", t.TextMuted, func() { a.state.reportErr(a.state.MoveAccount(acc, 1)) })
+		})
+		actionButton(c, trashIcon, "删除", t.Danger, func() { a.state.reportErr(a.state.RemoveAccount(acc)) })
 	})
 }
 

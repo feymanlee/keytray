@@ -23,7 +23,8 @@ type importState struct {
 	err     string
 	busy    bool // a capture is running
 
-	backupPw string
+	backupPw              string
+	needsScreenPermission bool
 
 	// pickOpen is injectable for tests; default is the system open dialog.
 	pickOpen func(opts mygo.OpenDialogOptions) ([]string, error)
@@ -59,7 +60,11 @@ func (is *importState) view(c *ui.Context) {
 		ui.Text(c, "导入账号").FontSize(16).Bold()
 		ui.Text(c, "粘贴 otpauth:// 链接(每行一条),或截取屏幕上的二维码。").
 			FontSize(12).TextColor(t.TextMuted)
-		ui.TextArea(c.Key("uris"), &is.text).Bind(&is.ta).Grow(1).Label("otpauth 链接")
+		if is.needsScreenPermission {
+			is.screenPermissionView(c)
+		} else {
+			ui.TextArea(c.Key("uris"), &is.text).Bind(&is.ta).Grow(1).Label("otpauth 链接")
+		}
 
 		ui.Divider(c)
 		ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
@@ -83,6 +88,28 @@ func (is *importState) view(c *ui.Context) {
 			ui.Spacer(c)
 			ui.Button(c.Key("close"), "关闭").Label("关闭").OnClick(func() { is.win.Hide() })
 			ui.PrimaryButton(c.Key("import"), "导入").Label("导入").OnClick(func() { is.run() })
+		})
+	})
+}
+
+func (is *importState) screenPermissionView(c *ui.Context) {
+	t := c.Theme()
+	services := c.Services()
+	ui.Column(c.Key("screen-permission")).Grow(1).Padding(16).Gap(10).
+		Background(t.Accent.Mix(t.Surface, 0.96)).Radius(8).Children(func() {
+		ui.Text(c, "开启屏幕录制权限").FontSize(15).Bold()
+		ui.Text(c, "截图识别二维码需要允许 Keytray 读取屏幕。").FontSize(12).TextColor(t.TextMuted)
+		ui.Text(c, "1. 打开「系统设置 → 隐私与安全性」。").FontSize(12)
+		ui.Text(c, "2. 在「屏幕与系统音频录制」中开启 Keytray。").FontSize(12)
+		ui.Text(c, "较早版本 macOS 中，此项名为「屏幕录制」。").FontSize(11).TextColor(t.TextMuted)
+		ui.Text(c, "3. 按系统提示重新打开 Keytray，然后再次截图。").FontSize(12)
+		ui.Row(c).Gap(8).Children(func() {
+			ui.PrimaryButton(c.Key("open-screen-settings"), "打开系统设置").
+				OnClick(func() {
+					services.OpenURL("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+				})
+			ui.Button(c.Key("back-to-uris"), "返回链接导入").
+				OnClick(func() { is.needsScreenPermission = false })
 		})
 	})
 }
@@ -155,6 +182,7 @@ func (a *app) startCapture(is *importState) {
 		a.panel.Close()
 	}
 	is.busy = true
+	is.err, is.summary = "", ""
 	is.win.Show()
 
 	if runtime.GOOS != "darwin" {
@@ -171,18 +199,7 @@ func (a *app) startCapture(is *importState) {
 				uris, err = qrcode.DecodeAllBytes(pngBytes)
 			}
 			is.win.Update(func() {
-				is.busy = false
-				switch {
-				case err != nil:
-					is.err = "识别失败:" + err.Error()
-				default:
-					is.err = ""
-					if is.text != "" && !strings.HasSuffix(is.text, "\n") {
-						is.text += "\n"
-					}
-					is.text += strings.Join(uris, "\n") + "\n"
-					is.summary = selectionSummary(len(uris))
-				}
+				is.finishCapture(uris, err)
 				is.win.Show()
 			})
 		}()
@@ -198,29 +215,25 @@ func (a *app) startCapture(is *importState) {
 			uris, err = qrcode.DecodeAllBytes(png)
 		}
 		is.win.Update(func() {
-			is.busy = false
-			switch {
-			case errors.Is(err, screenshot.ErrCanceled):
-				// User dismissed the selection; nothing to report.
-			case errors.Is(err, screenshot.ErrPermission):
-				is.err = "屏幕录制权限未生效:系统设置允许后需重启应用再试"
-			case err != nil:
-				is.err = "识别失败:" + err.Error()
-			default:
-				is.err = ""
-				if is.text != "" && !strings.HasSuffix(is.text, "\n") {
-					is.text += "\n"
-				}
-				is.text += strings.Join(uris, "\n") + "\n"
-				if len(uris) == 1 {
-					is.summary = "已识别 1 个二维码,确认后点「导入」"
-				} else {
-					is.summary = fmt.Sprintf("已识别 %d 个二维码,确认后点「导入」", len(uris))
-				}
-			}
+			is.finishCapture(uris, err)
 			is.win.Show()
 		})
 	}()
+}
+
+func (is *importState) finishCapture(uris []string, err error) {
+	is.busy = false
+	is.err, is.summary = "", ""
+	is.needsScreenPermission = errors.Is(err, screenshot.ErrPermission)
+	switch {
+	case errors.Is(err, screenshot.ErrCanceled), is.needsScreenPermission:
+		return
+	case err != nil:
+		is.err = "识别失败:" + err.Error()
+	default:
+		appendURIs(is, uris)
+		is.summary = selectionSummary(len(uris))
+	}
 }
 
 // appendURIs appends URIs to the review textarea, one per line.
