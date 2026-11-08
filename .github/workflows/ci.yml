@@ -38,7 +38,7 @@ jobs:
         include:
           - { os: ubuntu-latest, target: linux,   files: "dist/" }
           - { os: windows-latest, target: windows, files: "dist/" }
-          - { os: macos-latest, target: macos,   files: "build/darwin-arm64/" }
+          - { os: macos-latest, target: macos,   files: "build/darwin-universal/" }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

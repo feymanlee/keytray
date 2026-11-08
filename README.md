@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="resources/icon.png" alt="Keytray Logo" width="128" height="128">
+
 # Keytray
 
 ### 两步验证码,就在菜单栏。
