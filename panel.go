@@ -124,8 +124,10 @@ func (a *app) mainView(c *ui.Context) {
 
 		a.list.Key = func(i int) any { return fmt.Sprintf("%d/%s", i, rowLabel(s.rows[i])) }
 		a.list.Label = func(i int) string { return rowLabel(s.rows[i]) }
-		// Sticky group headers in the grouped view.
-		a.list.Header = func(i int) bool { return s.rows[i].header }
+		// Group headers as plain rows: List's sticky pinning draws the
+		// pinned header over rows scrolling beneath it, which reads as
+		// overlapping text at our row density.
+		a.list.Header = nil
 		// Drag reorder only when rows map 1:1 to vault order: flat full
 		// view (grouping off). Search, manage mode and grouped views
 		// disable it.
