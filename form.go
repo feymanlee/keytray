@@ -109,13 +109,15 @@ func (fs *formState) view(c *ui.Context) {
 				formField(c, "计数器", &s.counter, "0")
 			}
 
-			if s.err != "" {
-				ui.Text(c, s.err).FontSize(12).TextColor(warnColor)
-			}
 		})
 		ui.Divider(c)
-		ui.Row(c).Padding(12, 20).Gap(8).Children(func() {
-			ui.Spacer(c)
+		// 错误信息钉在底栏,不随滚动,任何位置都可见。
+		ui.Row(c).Padding(12, 20).Gap(8).AlignItems(ui.Center).Children(func() {
+			if s.err != "" {
+				ui.Text(c, s.err).FontSize(12).TextColor(warnColor).Grow(1)
+			} else {
+				ui.Spacer(c)
+			}
 			ui.Button(c.Key("cancel"), "取消").Label("取消").Padding(3, 10).FontSize(13).OnClick(func() {
 				if s.win != nil {
 					s.win.Close()
