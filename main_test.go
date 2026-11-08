@@ -534,7 +534,7 @@ func TestViewManageModeAndTypingSafety(t *testing.T) {
 	tt := ui.NewTester(a.view, panelWidth, panelHeight)
 
 	tt.Click("管理")
-	if !s.manageMode || !tt.HasText("完成管理") || !tt.HasText("✎") {
+	if !s.manageMode || !tt.HasText("完成管理") {
 		t.Fatalf("manage mode not shown: %q", tt.Texts())
 	}
 

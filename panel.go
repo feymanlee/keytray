@@ -284,14 +284,11 @@ func (a *app) manageRow(c *ui.Context, i int, acc otp.Account) {
 		Padding(6, 10).Gap(6).AlignItems(ui.Center).Radius(8).Children(func() {
 		ui.Text(c, accountLabel(acc)).Grow(1).SingleLine()
 		ui.Text(c, string(acc.Type)).FontSize(10).TextColor(t.TextMuted)
-		ui.Button(c.Key(fmt.Sprintf("edit-%d", i)), "✎").Label("编辑").
-			OnClick(func() { a.openForm(acc) })
-		ui.Button(c.Key(fmt.Sprintf("up-%d", i)), "↑").Label("上移").
-			OnClick(func() { a.state.reportErr(a.state.MoveAccount(acc, -1)) })
-		ui.Button(c.Key(fmt.Sprintf("down-%d", i)), "↓").Label("下移").
-			OnClick(func() { a.state.reportErr(a.state.MoveAccount(acc, 1)) })
-		ui.Button(c.Key(fmt.Sprintf("del-%d", i)), "🗑").Label("删除").
-			OnClick(func() { a.state.reportErr(a.state.RemoveAccount(acc)) })
+		manageOnce.Do(loadManageIcons)
+		actionButton(c, editIcon, "编辑", func() { a.openForm(acc) })
+		actionButton(c, upIcon, "上移", func() { a.state.reportErr(a.state.MoveAccount(acc, -1)) })
+		actionButton(c, downIcon, "下移", func() { a.state.reportErr(a.state.MoveAccount(acc, 1)) })
+		actionButton(c, trashIcon, "删除", func() { a.state.reportErr(a.state.RemoveAccount(acc)) })
 	})
 }
 

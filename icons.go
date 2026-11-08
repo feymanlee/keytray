@@ -67,3 +67,45 @@ func iconForIssuer(issuer string) *ui.SVG {
 	}
 	return nil
 }
+
+// manageIcons are the row-action icons (24×24 stroke style, colored by
+// currentColor to follow the theme).
+var (
+	manageOnce sync.Once
+	editIcon   *ui.SVG
+	upIcon     *ui.SVG
+	downIcon   *ui.SVG
+	trashIcon  *ui.SVG
+)
+
+func mustSVG(src string) *ui.SVG {
+	svg, err := ui.ParseSVG([]byte(src))
+	if err != nil {
+		return nil
+	}
+	return svg
+}
+
+func loadManageIcons() {
+	stroke := func(body string) string {
+		return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` + body + `</svg>`
+	}
+	editIcon = mustSVG(stroke(`<path d="M17 3l4 4L8 20l-5 1 1-5z"/><path d="M15 5l4 4"/>`))
+	upIcon = mustSVG(stroke(`<polyline points="6 15 12 9 18 15"/>`))
+	downIcon = mustSVG(stroke(`<polyline points="6 9 12 15 18 9"/>`))
+	trashIcon = mustSVG(stroke(`<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/>`))
+}
+
+// actionButton is a small icon button with hover feedback.
+func actionButton(c *ui.Context, svg *ui.SVG, tip string, fn func()) {
+	b := ui.Row(c).Padding(4, 6).Radius(6).AlignItems(ui.Center)
+	hovered := b.Hovered()
+	t := c.Theme()
+	bg := ui.Transparent
+	if hovered {
+		bg = t.SurfacePressed
+	}
+	b.Background(bg).OnClick(fn).Children(func() {
+		ui.Icon(c, svg).FontSize(14).TextColor(t.Text)
+	})
+}
