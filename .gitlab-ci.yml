@@ -1,0 +1,122 @@
+# Keytray 三平台 Release 流水线
+#
+# - test:           单测 + vet(Linux docker runner 即可)
+# - build:linux     Linux amd64/arm64 二进制
+# - build:windows   Windows amd64 exe(交叉编译,零 cgo)
+# - build:macos     macOS .app/.dmg(需要原生 macOS runner:tags: [macos];
+#                   没有此类 runner 时流水线不受影响,任务保持 manual)
+# - release:        打 tag 时发布,汇总上方产物
+#
+# 用法:git tag v0.2.0 && git push --tags
+
+stages: [test, build, release]
+
+variables:
+  CGO_ENABLED: "0"
+  GOFLAGS: "-mod=mod"
+
+.golang: &golang
+  image: golang:1.27-alpine
+
+test:
+  <<: *golang
+  stage: test
+  script:
+    - go vet ./...
+    - CGO_ENABLED=0 go test -count=1 ./...
+
+# ---- 构建 ----
+
+build:linux:
+  <<: *golang
+  stage: build
+  script:
+    - mkdir -p dist
+    - GOOS=linux GOARCH=amd64 go build -o dist/keytray-linux-amd64 .
+    - GOOS=linux GOARCH=arm64 go build -o dist/keytray-linux-arm64 .
+  artifacts:
+    paths: [dist/]
+    expire_in: 1 week
+
+build:windows:
+  <<: *golang
+  stage: build
+  script:
+    - mkdir -p dist
+    - GOOS=windows GOARCH=amd64 go build -o dist/keytray-windows-amd64.exe .
+  artifacts:
+    paths: [dist/]
+    expire_in: 1 week
+
+# 需要 macOS shell runner(标签 macos):Go + 本仓库依赖已就绪的机器。
+# mygo 的 .app/.dmg 打包与签名只能在 macOS 上完成。
+build:macos:
+  stage: build
+  tags: [macos]
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: manual
+      allow_failure: true
+    - when: never
+  script:
+    - go tool mygo build -skip-notarize
+    - mkdir -p dist
+    - cp build/darwin-arm64/Keytray.app/Contents/MacOS/Keytray dist/ 2>/dev/null || true
+    - cp build/darwin-arm64/*.dmg dist/ 2>/dev/null || true
+  artifacts:
+    paths: [dist/]
+    expire_in: 1 week
+
+# ---- 发布(仅 tag)----
+
+release:
+  stage: release
+  image: alpine:3.20
+  before_script:
+    - apk add --no-cache curl jq
+  rules:
+    - if: $CI_COMMIT_TAG
+  needs:
+    - job: build:linux
+      artifacts: true
+    - job: build:windows
+      artifacts: true
+    - job: build:macos
+      artifacts: true
+      optional: true
+  script:
+    - VERSION="$CI_COMMIT_TAG"
+    - |
+      curl --fail --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --upload-file "dist/keytray-linux-amd64" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/keytray/${VERSION}/keytray-${VERSION}-linux-amd64"
+    - |
+      curl --fail --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --upload-file "dist/keytray-linux-arm64" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/keytray/${VERSION}/keytray-${VERSION}-linux-arm64"
+    - |
+      curl --fail --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+        --upload-file "dist/keytray-windows-amd64.exe" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/keytray/${VERSION}/keytray-${VERSION}-windows-amd64.exe"
+    - |
+      if [ -f dist/*.dmg ] || compgen -G "dist/*.dmg" > /dev/null; then
+        DMG=$(ls dist/*.dmg | head -1)
+        curl --fail --header "JOB-TOKEN: $CI_JOB_TOKEN" \
+          --upload-file "$DMG" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/keytray/${VERSION}/keytray-${VERSION}-macos.dmg"
+      fi
+    - |
+      release-cli create \
+        --name "Keytray ${VERSION}" \
+        --description "三平台 Release。macOS 建议使用 dmg(含签名 .app);Windows/Linux 为裸二进制。" \
+        --tag-name "$VERSION" \
+        --assets-link "{\"name\":\"keytray-${VERSION}-linux-amd64\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/keytray/${VERSION}/keytray-${VERSION}-linux-amd64\"}" \
+        --assets-link "{\"name\":\"keytray-${VERSION}-linux-arm64\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/keytray/${VERSION}/keytray-${VERSION}-linux-arm64\"}" \
+        --assets-link "{\"name\":\"keytray-${VERSION}-windows-amd64.exe\",\"url\":\"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/keytray/${VERSION}/keytray-${VERSION}-windows-amd64.exe\"}"
+  after_script:
+    - echo "release done"
+EOF
+git add .gitlab-ci.yml && git commit -m "GitLab CI:三平台构建与 tag 发布流水线" 2>&1 | tail -1 && git log --oneline | head -3
+__zcode_status=$?
+if [ "$__zcode_status" -eq 0 ]; then pwd -P > '/var/folders/jc/g02lh3_j6n3d27675w4n763w0000gp/T/zcode-7cc22405-53d6-48cb-8dfd-c59fc1c7c983-cwd'; fi
+exit "$__zcode_status"
