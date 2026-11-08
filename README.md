@@ -26,12 +26,19 @@ go tool mygo build -skip-notarize   # 产出 build/darwin-arm64/Keytray.app + dm
 GOOS=windows go build -o keytray.exe .   # Windows 交叉编译
 ```
 
-## 平台状态
+## 平台状态与系统要求
 
-| 平台 | 状态 |
-|---|---|
-| macOS (arm64) | ✅ 完整功能,日常使用中 |
-| Windows | ⚠️ 编译通过;全屏识别导入可用,框选交互与实机验收待续 |
+| 平台 | 最低系统版本 | 芯片 | 产物 | 状态 |
+|---|---|---|---|---|
+| macOS | **12.0 Monterey**(mygo 框架要求) | Universal(Apple Silicon + Intel 同包) | .dmg | ✅ 完整功能,日常使用中 |
+| Windows | **10**(11 上有圆角/透明加成) | amd64(ARM 设备走系统模拟层) | .exe | ⚠️ 编译通过;全屏识别导入可用,框选交互与实机验收待续 |
+| Linux | 无硬性版本(静态二进制) | amd64 + arm64 | 裸二进制 | ⚠️ 编译通过;需图形桌面 + 任一截屏工具(gnome-screenshot/spectacle/import),实机验收待续 |
+
+功能分层说明(macOS):核心功能 12.0 即可;开机自启在 13+ 走系统登录项、12 上自动降级为 launch agent。
+
+## CI/CD(GitHub Actions)
+
+推送自动跑测试;打 `v*` tag 自动构建三平台并发布 Release(macOS 为 universal dmg)。无需自备 runner。
 
 ## 安全模型
 
