@@ -1152,3 +1152,21 @@ func TestSettingsHideAfterCopyPersist(t *testing.T) {
 		t.Error("persisted off expected")
 	}
 }
+
+func TestLabelOverflows(t *testing.T) {
+	if labelOverflows("payermax") {
+		t.Error("short ASCII should not overflow")
+	}
+	if !labelOverflows("code.changbaops.com:code.changbaops.com_lifameng@changba.com") {
+		t.Error("long ASCII should overflow")
+	}
+	if labelOverflows("唱吧堡垒机系统:lifameng") {
+		t.Error("7 CJK + 8 ASCII fits (~154pt)")
+	}
+	if !labelOverflows("唱吧堡垒机系统:lifameng@changba.com") {
+		t.Error("CJK+long ASCII should overflow")
+	}
+	if labelOverflows("GitHub:feyman") {
+		t.Error("medium label fits")
+	}
+}

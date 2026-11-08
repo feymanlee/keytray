@@ -261,18 +261,21 @@ func (a *app) row(c *ui.Context, i int) {
 		}
 	})
 	// 溢出省略时悬停看全名:自绘轻量气泡(主题底色),不用系统黑泡。
+	// 名称没溢出就不挂 tooltip。
 	label := accountLabel(acc)
-	ui.TooltipBase(c, row, func(tip ui.Element) {
-		// tip 自身透明,透明 Padding 撑出与行的距离;内层 Box 是可见气泡
-		// (自动定位保留,超长名称换行)。
-		tip.MaxWidth(panelWidth - 24).Padding(6).Background(ui.Transparent)
-		tip.Children(func() {
-			ui.Box(c).Padding(4, 9).Radius(6).
-				Background(t.SurfacePressed).Border(1, t.Border).Children(func() {
-				ui.Text(c, label).FontSize(11).TextColor(t.Text)
+	if labelOverflows(label) {
+		ui.TooltipBase(c, row, func(tip ui.Element) {
+			// tip 自身透明,透明 Padding 撑出与行的距离;内层 Box 是可见气泡
+			// (自动定位保留,超长名称换行)。
+			tip.MaxWidth(panelWidth - 24).Padding(6).Background(ui.Transparent)
+			tip.Children(func() {
+				ui.Box(c).Padding(4, 9).Radius(6).
+					Background(t.SurfacePressed).Border(1, t.Border).Children(func() {
+					ui.Text(c, label).FontSize(11).TextColor(t.Text)
+				})
 			})
 		})
-	})
+	}
 }
 
 // hoverBG is the row background while hovered: SurfacePressed, one step
@@ -589,4 +592,19 @@ func (s *panelState) copyOrd(ord int) {
 			return
 		}
 	}
+}
+
+// labelOverflows estimates whether a label exceeds the row's name space
+// (panel 360 − padding − icon − code − shortcut ≈ 190pt at 13px: CJK ≈13,
+// ASCII ≈7). Approximate; borderline names may err either way.
+func labelOverflows(label string) bool {
+	w := 0
+	for _, r := range label {
+		if r > 0x2E80 { // CJK and fullwidth ranges
+			w += 13
+		} else {
+			w += 7
+		}
+	}
+	return w > 190
 }
