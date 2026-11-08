@@ -239,6 +239,7 @@ func (a *app) row(c *ui.Context, i int) {
 		Height(28).Padding(0, 10).Gap(8).AlignItems(ui.Center).Radius(6)
 	hovered := row.Hovered()
 	row.Background(hoverBG(t, hovered)).
+		Tooltip(accountLabel(acc)). // 溢出省略时,悬停看全名
 		OnClick(func() { s.copy(r.accIdx) }).Children(func() {
 		if svg := iconForIssuer(acc.Issuer); svg != nil {
 			ui.Icon(c, svg).FontSize(15).TextColor(t.Text)
