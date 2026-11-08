@@ -369,7 +369,7 @@ func (s *panelState) copy(i int) {
 	s.copiedLabel, s.copiedAt = accountLabel(s.filtered[i]), time.Now()
 	s.touch()
 	if s.settings.HideAfterCopy {
-		s.hideAt = time.Now().Add(2 * time.Second)
+		s.hideAt = time.Now().Add(1 * time.Second)
 	}
 	s.writeClip(code)
 	s.scheduleClear(code)
