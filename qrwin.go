@@ -1,0 +1,84 @@
+package main
+
+import (
+	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/ui"
+	qrcode "github.com/skip2/go-qrcode"
+
+	"keytray/internal/otp"
+)
+
+// qrState is the persistent "account QR" window: scan it with a phone to
+// migrate one account, or copy the URI from the same screen.
+type qrState struct {
+	app *app
+	acc otp.Account
+	uri string
+	bmp *ui.Bitmap
+	err string
+	win *mygo.Window
+}
+
+func newQRState(a *app) *qrState {
+	qs := &qrState{app: a}
+	qs.win = mygo.NewWindow(mygo.WindowOptions{
+		Title:         "账号二维码",
+		Width:         320,
+		Height:        440,
+		Hidden:        true,
+		DisableResize: true,
+		Content:       ui.View(qs.view),
+	})
+	qs.win.OnClose(func(e *mygo.CloseEvent) {
+		e.PreventDefault()
+		qs.win.Hide()
+	})
+	return qs
+}
+
+func (qs *qrState) view(c *ui.Context) {
+	t := c.Theme()
+	ui.Column(c).Fill().Padding(20).Gap(12).AlignItems(ui.Center).Children(func() {
+		ui.Text(c, accountLabel(qs.acc)).FontSize(14).Bold().SingleLine()
+
+		switch {
+		case qs.err != "":
+			ui.Text(c, qs.err).FontSize(12).TextColor(warnColor)
+		case qs.bmp != nil:
+			ui.Image(c, qs.bmp).Size(240, 240).Radius(8).Background(ui.RGB(255, 255, 255))
+		default:
+			ui.Spacer(c)
+			ui.Spacer(c)
+		}
+
+		ui.Text(c, qs.uri).FontSize(10).TextColor(t.TextMuted)
+		ui.Row(c).Gap(8).Children(func() {
+			ui.Button(c.Key("copy-uri"), "复制链接").Label("复制链接").
+				OnClick(func() { mygo.Clipboard.WriteText(qs.uri) })
+			ui.Button(c.Key("close"), "关闭").Label("关闭").OnClick(func() { qs.win.Hide() })
+		})
+	})
+}
+
+// showQR renders the account's otpauth URI as a QR code and shows it.
+// Called on the main thread (context menu callback).
+func (a *app) showQR(acc otp.Account) {
+	if !a.windows {
+		a.lastAction = "qr"
+		return
+	}
+	qs := a.qrUI
+	qs.acc = acc
+	qs.uri, _ = acc.URI()
+	qs.err, qs.bmp = "", nil
+
+	png, err := qrcode.Encode(qs.uri, qrcode.Medium, 480)
+	if err == nil {
+		qs.bmp, err = ui.DecodeBitmap(png)
+	}
+	if err != nil {
+		qs.err = "二维码生成失败:" + err.Error()
+	}
+	qs.win.Update(func() {})
+	qs.win.Show()
+}

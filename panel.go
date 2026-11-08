@@ -38,6 +38,7 @@ type app struct {
 	tray     *mygo.Tray
 	panel    *mygo.Window // the open flyout, or nil
 	importUI *importState // the hidden, reusable import window
+	qrUI     *qrState     // the hidden, reusable account-QR window
 
 	search ui.Handle // the search input
 	pw     ui.Handle // the password input of whichever view is shown
@@ -258,6 +259,13 @@ func (a *app) row(c *ui.Context, i int) {
 		}
 		if m.Item("下移").Chosen() {
 			s.reportErr(s.MoveAccount(acc, 1))
+		}
+		m.Separator()
+		if uri, err := acc.URI(); err == nil && m.Item("复制链接").Chosen() {
+			mygo.Clipboard.WriteText(uri)
+		}
+		if m.Item("显示二维码").Chosen() {
+			a.showQR(acc)
 		}
 		m.Separator()
 		if m.Item("删除").Danger().Chosen() {
@@ -558,6 +566,7 @@ func (a *app) ready() {
 	})
 
 	a.importUI = newImportState(a)
+	a.qrUI = newQRState(a)
 	go a.autoLockLoop()
 	a.ensureHTTP()
 
