@@ -34,11 +34,12 @@ type app struct {
 	state *panelState
 
 	tray         *mygo.Tray
-	panel        *mygo.Window  // the open flyout, or nil
-	panelDone    chan struct{} // stops the panel tick loop
-	panelShownAt time.Time     // grace for the focus polling guard
-	siblings     int           // our open windows that legitimately hold the keyboard
-	importUI     *importState  // the hidden, reusable import window
+	panel        *mygo.Window   // the open flyout, or nil
+	panelDone    chan struct{}  // stops the panel tick loop
+	panelShownAt time.Time      // grace for the focus polling guard
+	childWins    []*mygo.Window // windows opened from the panel
+	lastChildAt  time.Time      // last child registration (focus race grace)
+	importUI     *importState   // the hidden, reusable import window
 
 	search ui.Handle // the search input
 	pw     ui.Handle // the password input of whichever view is shown
@@ -396,8 +397,7 @@ func (a *app) tickLoop(p *mygo.Window, done chan struct{}) {
 				// panel; poll as a backstop (2s grace after showing).
 				if now.Sub(a.panelShownAt) > 2*time.Second &&
 					a.panel.IsVisible() && !a.panel.IsFocused() &&
-					a.siblings == 0 &&
-					!(a.importUI != nil && a.importUI.win.IsVisible()) {
+					!a.childHoldsKey() {
 					a.hidePanel()
 				}
 			})
@@ -671,11 +671,33 @@ func labelOverflows(label string) bool {
 // panelBlur hides the panel on focus loss, except when the focus went to
 // one of our sibling windows.
 func (a *app) panelBlur() {
-	if a.siblings > 0 {
-		return
-	}
-	if a.importUI != nil && a.importUI.win.IsVisible() {
+	if a.childHoldsKey() {
 		return
 	}
 	a.hidePanel()
+}
+
+// childHoldsKey reports whether a panel-opened window currently holds
+// the keyboard — the panel must stay while that is true.
+func (a *app) childHoldsKey() bool {
+	// Grace right after registering a child: its key status may not have
+	// settled when the panel's blur arrives.
+	if time.Since(a.lastChildAt) < time.Second {
+		return true
+	}
+	for _, w := range a.childWins {
+		if w.IsVisible() && w.IsFocused() {
+			return true
+		}
+	}
+	if a.importUI != nil && a.importUI.win.IsVisible() && a.importUI.win.IsFocused() {
+		return true
+	}
+	return false
+}
+
+// registerChild tracks a window opened from the panel.
+func (a *app) registerChild(w *mygo.Window) {
+	a.childWins = append(a.childWins, w)
+	a.lastChildAt = time.Now()
 }

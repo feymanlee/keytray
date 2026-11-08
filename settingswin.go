@@ -32,8 +32,7 @@ func newSettingsWindow(a *app) {
 		Height:  520,
 		Content: ui.View(ss.view),
 	})
-	a.siblings++
-	ss.win.OnClosed(func() { a.siblings-- })
+	a.registerChild(ss.win)
 }
 
 func (ss *settingsState) view(c *ui.Context) {
