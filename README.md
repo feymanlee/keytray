@@ -52,7 +52,7 @@ Keytray 运行在 macOS（12+）、Windows（10+）和 Linux 上，常驻系统�
 
 ```sh
 go tool mygo build -skip-notarize                    # macOS：.app + DMG
-GOOS=windows GOARCH=amd64 go build -o keytray.exe .  # Windows
+GOOS=windows GOARCH=amd64 go build -ldflags "-H windowsgui" -o keytray.exe .  # Windows(GUI 子系统,无终端窗)
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o keytray .
 ```
 
