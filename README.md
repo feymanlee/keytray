@@ -20,13 +20,24 @@
 
 **[Download](https://github.com/feymanlee/keytray/releases)** &nbsp;·&nbsp; **[License](LICENSE)**
 
-<picture>
-  <img src="docs/screenshot-panel.png" width="400" alt="托盘面板:按服务分组,点击或 ⇧⌘N 复制">
-</picture>
-<p>
-  <img src="docs/screenshot-context-menu.png" width="400" alt="右键菜单:编辑 / 上移 / 下移 / 复制链接 / 显示二维码 / 删除">&nbsp;
-  <img src="docs/screenshot-qr.png" width="380" alt="账号二维码:手机扫码迁移单账号">
-</p>
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/images/feature-qr.png" width="240" alt="二维码导入">
+    </td>
+    <td align="center">
+      <img src="docs/images/feature-manage.png" width="240" alt="账号管理">
+    </td>
+    <td align="center">
+      <img src="docs/images/feature-panel.png" width="240" alt="托盘面板">
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><sub>二维码导入</sub></td>
+    <td align="center"><sub>账号管理</sub></td>
+    <td align="center"><sub>托盘面板</sub></td>
+  </tr>
+</table>
 
 </div>
 
