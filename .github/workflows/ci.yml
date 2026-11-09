@@ -59,7 +59,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          go build -o dist/keytray-windows-amd64.exe .
+          go build -ldflags "-H windowsgui" -o dist/keytray-windows-amd64.exe .
 
       - name: macOS(universal:Apple Silicon + Intel,mygo 打包)
         if: matrix.target == 'macos'
