@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
@@ -109,9 +110,10 @@ func (es *exportState) submit() {
 			return
 		}
 		opts = mygo.SaveDialogOptions{
-			Title:   "导出加密备份",
-			Message: "备份文件包含所有账号的密钥",
-			Filters: []mygo.FileFilter{{Name: "Keytray 备份", Extensions: []string{"kt"}}},
+			Title:       "导出加密备份",
+			Message:     "备份文件包含所有账号的密钥",
+			DefaultPath: fmt.Sprintf("keytray-backup-%s.kt", time.Now().Format("20060102-150405")),
+			Filters:     []mygo.FileFilter{{Name: "Keytray 备份", Extensions: []string{"kt"}}},
 		}
 	default:
 		// The master-password confirmation exists only in encrypted mode;
@@ -127,9 +129,10 @@ func (es *exportState) submit() {
 			return
 		}
 		opts = mygo.SaveDialogOptions{
-			Title:   "导出明文 CSV",
-			Message: "明文 CSV 包含所有密钥,请妥善保管",
-			Filters: []mygo.FileFilter{{Name: "CSV", Extensions: []string{"csv"}}},
+			Title:       "导出明文 CSV",
+			Message:     "明文 CSV 包含所有密钥,请妥善保管",
+			DefaultPath: fmt.Sprintf("keytray-accounts-%s.csv", time.Now().Format("20060102-150405")),
+			Filters:     []mygo.FileFilter{{Name: "CSV", Extensions: []string{"csv"}}},
 		}
 	}
 
